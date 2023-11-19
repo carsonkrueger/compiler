@@ -1,2 +1,2 @@
 # compiler
-A compiler I am working on for fun :)
+A compiler that I am working on for fun :)
