@@ -1,0 +1,6 @@
+class
+hello {
+    if hi() {
+        yo
+    }
+}
