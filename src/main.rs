@@ -13,17 +13,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let lexer = Lexer::new(&args.file_path);
+    let mut lexer = Lexer::new(&args.file_path);
 
-    // if args.count != 1 {
-    //     panic!("Invalid args");
-    // }
-
-    // loop {
-    //     let next_token = lexer.next();
-    //     println!("{:?}", next_token);
-    //     if next_token.is_none() {
-    //         break;
-    //     }
-    // }
+    lexer.run();
 }
