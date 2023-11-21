@@ -19,11 +19,11 @@ fn main() {
     //     panic!("Invalid args");
     // }
 
-    loop {
-        let next_token = lexer.next();
-        println!("{:?}", next_token);
-        if next_token.is_none() {
-            break;
-        }
-    }
+    // loop {
+    //     let next_token = lexer.next();
+    //     println!("{:?}", next_token);
+    //     if next_token.is_none() {
+    //         break;
+    //     }
+    // }
 }
