@@ -7,11 +7,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 pub struct Lexer {
-    tokens: Vec<Token>,
     buf: BufReader<File>,
-    // file_contents: String,
     unprocessed_lexeme: VecDeque<String>,
-
     line_index: usize,
     patterns: Patterns,
 }
@@ -19,40 +16,20 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(file_path: &String) -> Self {
         Self {
-            tokens: Vec::new(),
             buf: BufReader::new(File::open(file_path).expect("Could not open file")),
-            // file_contents: fs::read_to_string(file_path),
-            // lexeme_iter: None,
-            // cur_line: String::new(),
             unprocessed_lexeme: VecDeque::new(),
             line_index: 0,
             patterns: Patterns::new(),
         }
     }
-    pub fn run(&mut self) {
-        let mut cur_line = match self.next_line() {
-            Some(l) => l.as_str().to_owned(),
-            None => return (),
-        };
-
-        self.split_line(&cur_line);
-
-        for lexeme in &self.unprocessed_lexeme {
-            println!("{}", lexeme);
-        }
-    }
-    fn split_line(&mut self, line: &String) {
+    fn split_line_into_lexeme(&mut self, line: &String) {
         let mut lexeme_iter = self.patterns.any.find_iter(&line);
         let mut matches = lexeme_iter.next();
 
-        // while !cur_match.is_none() {
         for m in matches {
             let cur_lexeme = m.as_str().to_owned();
             self.unprocessed_lexeme.push_back(cur_lexeme);
         }
-    }
-    fn add_token(&mut self, token: Token) {
-        self.tokens.push(token);
     }
     fn next_line(&mut self) -> Option<String> {
         let mut s = String::new();
@@ -65,7 +42,7 @@ impl Lexer {
     fn next_lexeme(&mut self) -> Option<String> {
         self.unprocessed_lexeme.pop_front()
     }
-    fn lexeme_type(&self, lexeme: String) -> Option<TokenType> {
+    fn lexeme_type(&self, lexeme: &String) -> Option<TokenType> {
         if self.patterns.l_paren.is_match(&lexeme) {
             Some(TokenType::LParen)
         } else if self.patterns.r_paren.is_match(&lexeme) {
@@ -126,7 +103,34 @@ impl Lexer {
     }
     fn next_token(&mut self) -> Option<Token> {
         let lexeme = self.next_lexeme().unwrap().as_str().to_owned();
-        let token_type = self.lexeme_type(lexeme);
+        let token_type = self.lexeme_type(&lexeme);
         None
+    }
+}
+
+impl Iterator for Lexer {
+    type Item = Token;
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.unprocessed_lexeme.is_empty() {
+            let line = match self.next_line() {
+                Some(l) => l,
+                None => return None,
+            };
+            self.split_line_into_lexeme(&line);
+        }
+
+        let lexeme = match self.next_lexeme() {
+            Some(l) => l,
+            None => return None,
+        };
+
+        Some(Token {
+            lexeme: lexeme.to_owned(),
+            token_type: match self.lexeme_type(&lexeme) {
+                Some(t) => t,
+                None => panic!("Invalid token: {} on line: {}", lexeme, self.line_index),
+            },
+            line: self.line_index,
+        })
     }
 }

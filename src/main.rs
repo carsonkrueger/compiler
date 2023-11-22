@@ -15,5 +15,7 @@ fn main() {
     let args = Args::parse();
     let mut lexer = Lexer::new(&args.file_path);
 
-    lexer.run();
+    for token in lexer {
+        println!("{:?}", token);
+    }
 }
