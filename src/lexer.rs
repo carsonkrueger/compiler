@@ -24,11 +24,11 @@ impl Lexer {
     }
     fn split_line_into_lexeme(&mut self, line: &String) {
         let mut lexeme_iter = self.patterns.any.find_iter(&line);
-        let mut matches = lexeme_iter.next();
-
-        for m in matches {
-            let cur_lexeme = m.as_str().to_owned();
-            self.unprocessed_lexeme.push_back(cur_lexeme);
+        let mut m = lexeme_iter.next();
+        while m.is_some() {
+            self.unprocessed_lexeme
+                .push_back(m.unwrap().as_str().to_owned());
+            m = lexeme_iter.next();
         }
     }
     fn next_line(&mut self) -> Option<String> {
