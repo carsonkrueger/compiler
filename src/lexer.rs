@@ -1,5 +1,3 @@
-use regex::Matches;
-
 use crate::token::Token;
 use crate::{patterns::Patterns, token_type::TokenType};
 use std::collections::VecDeque;

@@ -4,6 +4,7 @@ mod lexer;
 mod patterns;
 mod token;
 mod token_type;
+mod visitor;
 
 #[derive(Parser, Debug)]
 struct Args {
