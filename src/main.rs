@@ -1,6 +1,10 @@
 use clap::Parser;
 use lexer::Lexer;
+use token::Token;
+
+mod expressions;
 mod lexer;
+mod parser;
 mod patterns;
 mod token;
 mod token_type;
@@ -14,9 +18,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let mut lexer = Lexer::new(&args.file_path);
 
-    for token in lexer {
-        println!("{:?}", token);
-    }
+    let mut lexer = Lexer::new(&args.file_path);
+    let tokens: Vec<Token> = lexer.into_iter().collect();
 }
