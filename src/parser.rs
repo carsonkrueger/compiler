@@ -1,5 +1,5 @@
 use crate::expressions::expr::Expr;
-use crate::statements::statement::Statement;
+use crate::statements::stmt::Stmt;
 use crate::{token::Token, token_type::TokenType};
 pub struct Parser<'a> {
     tokens: &'a Vec<Token>,
@@ -11,7 +11,7 @@ impl<'a> Parser<'a> {
         Self { tokens, cur_idx: 0 }
     }
     // will return a list of statements
-    pub fn parse() -> Vec<Statement> {
+    pub fn parse() -> Vec<Stmt> {
         unimplemented!()
     }
     fn current(&self) -> &Token {
@@ -23,6 +23,7 @@ impl<'a> Parser<'a> {
     fn advance(&mut self) {
         self.cur_idx += 1;
     }
+    /// consumes and advances IF current token matches token_type argument. Returns true if succesfully consumed token.
     fn consume_match(&mut self, token_type: &TokenType) -> bool {
         let bool = &self.current().token_type == token_type;
         if bool {
@@ -33,5 +34,7 @@ impl<'a> Parser<'a> {
     fn expression() -> Expr {
         unimplemented!()
     }
-    fn statement() {}
+    fn statement() -> Stmt {
+        unimplemented!()
+    }
 }
