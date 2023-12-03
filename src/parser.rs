@@ -1,4 +1,5 @@
 use crate::expressions::expr::Expr;
+use crate::statements::statement::Statement;
 use crate::{token::Token, token_type::TokenType};
 pub struct Parser<'a> {
     tokens: &'a Vec<Token>,
@@ -10,7 +11,9 @@ impl<'a> Parser<'a> {
         Self { tokens, cur_idx: 0 }
     }
     // will return a list of statements
-    pub fn parse() {}
+    pub fn parse() -> Vec<Statement> {
+        unimplemented!()
+    }
     fn current(&self) -> &Token {
         &self.tokens[self.cur_idx]
     }

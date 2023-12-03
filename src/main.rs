@@ -6,6 +6,7 @@ mod expressions;
 mod lexer;
 mod parser;
 mod patterns;
+mod statements;
 mod token;
 mod token_type;
 mod visitor;
