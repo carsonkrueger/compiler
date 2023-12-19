@@ -1,11 +1,11 @@
-use crate::expressions::expr::Expr;
+use crate::expr::Expr;
 
 enum Operator {
     Negate,
     Bang,
 }
 
-pub struct UnaryExpr {
+pub struct Unary {
     op: Operator,
     right: Expr,
 }

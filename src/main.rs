@@ -2,13 +2,12 @@ use clap::Parser;
 use lexer::Lexer;
 use token::Token;
 
-mod expressions;
+mod expr;
 mod lexer;
 mod parser;
 mod patterns;
 mod statements;
 mod token;
-mod token_type;
 mod visitor;
 
 #[derive(Parser, Debug)]

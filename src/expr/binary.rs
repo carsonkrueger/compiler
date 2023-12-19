@@ -1,4 +1,4 @@
-use crate::expressions::expr::Expr;
+use crate::expr::Expr;
 
 enum Operator {
     Mult,
@@ -7,7 +7,7 @@ enum Operator {
     Minus,
 }
 
-pub struct BinaryExpr {
+pub struct Binary {
     left: Expr,
     op: Operator,
     right: Expr,

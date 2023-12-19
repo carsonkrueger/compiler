@@ -1,4 +1,6 @@
-use crate::token_type::TokenType;
+pub mod token_type;
+
+use token_type::TokenType;
 
 #[derive(Debug)]
 pub struct Token {

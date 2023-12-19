@@ -1,6 +1,6 @@
-use crate::expressions::expr::Expr;
+use crate::expr::Expr;
 use crate::statements::stmt::Stmt;
-use crate::{token::Token, token_type::TokenType};
+use crate::token::{token_type::TokenType, Token};
 
 pub trait Parsable {
     type OutErr;
@@ -37,12 +37,6 @@ impl<'a> Parser<'a> {
             self.advance();
         }
         bool
-    }
-    fn expression() -> Expr {
-        unimplemented!()
-    }
-    fn statement() -> Stmt {
-        unimplemented!()
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::token::Token;
-use crate::{patterns::Patterns, token_type::TokenType};
+use crate::{patterns::Patterns, token::token_type::TokenType};
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
