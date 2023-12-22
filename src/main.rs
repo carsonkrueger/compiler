@@ -2,11 +2,12 @@ use clap::Parser;
 use lexer::Lexer;
 use token::Token;
 
-mod expr;
+mod ast;
+// mod expr;
 mod lexer;
 mod parser;
 mod patterns;
-mod statements;
+// mod statements;
 mod token;
 mod visitor;
 

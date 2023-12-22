@@ -5,6 +5,7 @@ enum Operator {
     Div,
     Plus,
     Minus,
+    EqEq,
 }
 
 pub struct Binary {

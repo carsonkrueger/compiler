@@ -1,5 +1,3 @@
-use crate::expr::Expr;
-use crate::statements::stmt::Stmt;
 use crate::token::{token_type::TokenType, Token};
 
 pub trait Parsable {
@@ -40,11 +38,11 @@ impl<'a> Parser<'a> {
     }
 }
 
-impl Parsable for Parser<'_> {
-    type OutOk = Vec<Stmt>;
-    type OutErr = ParseError;
-    // will return a list of statements
-    fn parse() -> Result<Self::OutOk, Self::OutErr> {
-        unimplemented!()
-    }
-}
+// impl Parsable for Parser<'_> {
+//     type OutOk = Vec<Stmt>;
+//     type OutErr = ParseError;
+//     // will return a list of statements
+//     fn parse() -> Result<Self::OutOk, Self::OutErr> {
+//         unimplemented!()
+//     }
+// }
