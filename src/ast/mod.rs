@@ -1,15 +1,23 @@
 use crate::token::token_type::TokenType;
 
 pub enum Expr {
+    Nil,
     Bool(bool),
     Int(i32),
     Float(f32),
-    Unary(UnaryOp, Box<Expr>),
-    Binary(Box<Expr>, BinaryOp, Box<Expr>),
+    Unary {
+        op: UnaryOp,
+        rhs: Box<Expr>,
+    },
+    Binary {
+        lhs: Box<Expr>,
+        op: BinaryOp,
+        rhs: Box<Expr>,
+    },
     Grouping(Box<Expr>),
 }
 
-enum BinaryOp {
+pub enum BinaryOp {
     Plus,
     Minus,
     Mult,
@@ -43,7 +51,18 @@ impl TryFrom<&TokenType> for BinaryOp {
     }
 }
 
-enum UnaryOp {
+pub enum UnaryOp {
     Bang,
     Negate,
+}
+
+impl TryFrom<&TokenType> for UnaryOp {
+    type Error = ();
+    fn try_from(value: &TokenType) -> Result<Self, Self::Error> {
+        match value {
+            TokenType::Bang => Ok(UnaryOp::Bang),
+            TokenType::Minus => Ok(UnaryOp::Negate),
+            _ => Err(()),
+        }
+    }
 }

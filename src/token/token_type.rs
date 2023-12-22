@@ -24,6 +24,7 @@ pub enum TokenType {
     Identifier,
     Str,
     Num,
+    Bool,
 
     And,
     Or,

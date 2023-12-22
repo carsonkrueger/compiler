@@ -1,4 +1,7 @@
-use crate::token::{token_type::TokenType, Token};
+use crate::{
+    ast::Expr,
+    token::{token_type::TokenType, Token},
+};
 
 pub trait Parsable {
     type OutErr;
@@ -35,6 +38,38 @@ impl<'a> Parser<'a> {
             self.advance();
         }
         bool
+    }
+    fn consume_first_match(&mut self, token_types: &[TokenType]) -> bool {
+        for t in token_types {
+            if &self.peek().token_type == t {
+                self.advance();
+                return true;
+            }
+        }
+        false
+    }
+    fn expression(&mut self) -> Expr {
+        unimplemented!()
+    }
+    fn literal(&mut self) -> Result<Expr, ()> {
+        let types = [
+            TokenType::Num,
+            TokenType::Nil,
+            TokenType::True,
+            TokenType::False,
+        ];
+        if self.consume_first_match(&types) {
+            let t = self.previous();
+            match t.token_type {
+                TokenType::Num => Ok(Expr::Float(t.lexeme.parse::<f32>().unwrap())),
+                TokenType::Nil => Ok(Expr::Nil),
+                TokenType::True => Ok(Expr::Bool(true)),
+                TokenType::False => Ok(Expr::Bool(false)),
+                _ => Err(()),
+            }
+        } else {
+            Err(())
+        }
     }
 }
 
