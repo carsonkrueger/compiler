@@ -1,5 +1,5 @@
 use crate::{
-    ast::Expr,
+    ast::{Expr, Literal},
     token::{token_type::TokenType, Token},
 };
 
@@ -51,7 +51,7 @@ impl<'a> Parser<'a> {
     fn expression(&mut self) -> Expr {
         unimplemented!()
     }
-    fn literal(&mut self) -> Result<Expr, ()> {
+    fn primary(&mut self) -> Result<Expr, ()> {
         let types = [
             TokenType::Num,
             TokenType::Nil,
@@ -61,10 +61,12 @@ impl<'a> Parser<'a> {
         if self.consume_first_match(&types) {
             let t = self.previous();
             match t.token_type {
-                TokenType::Num => Ok(Expr::Float(t.lexeme.parse::<f32>().unwrap())),
-                TokenType::Nil => Ok(Expr::Nil),
-                TokenType::True => Ok(Expr::Bool(true)),
-                TokenType::False => Ok(Expr::Bool(false)),
+                TokenType::Num => Ok(Expr::LiteralExpr(Literal::Float(
+                    t.lexeme.parse::<f32>().unwrap(),
+                ))),
+                TokenType::Nil => Ok(Expr::LiteralExpr(Literal::Nil)),
+                TokenType::True => Ok(Expr::LiteralExpr(Literal::Bool(true))),
+                TokenType::False => Ok(Expr::LiteralExpr(Literal::Bool(false))),
                 _ => Err(()),
             }
         } else {

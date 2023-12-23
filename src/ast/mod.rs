@@ -1,10 +1,14 @@
 use crate::token::token_type::TokenType;
 
-pub enum Expr {
+pub enum Literal {
     Nil,
     Bool(bool),
     Int(i32),
     Float(f32),
+}
+
+pub enum Expr {
+    LiteralExpr(Literal),
     Unary {
         op: UnaryOp,
         rhs: Box<Expr>,
