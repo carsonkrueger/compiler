@@ -1,7 +1,7 @@
 use core::panic;
 
 use crate::{
-    ast::{Expr, Literal, UnaryOp},
+    ast::{BinaryOp, Expr, Literal, UnaryOp},
     token::{token_type::TokenType, Token},
 };
 
@@ -60,18 +60,142 @@ impl<'a> Parser<'a> {
     fn expression(&mut self) -> Expr {
         unimplemented!()
     }
-    fn unary(&mut self) -> Expr {
+    fn equality(&mut self) -> Result<Expr, ()> {
+        let mut expr = match self.comparison() {
+            Ok(u) => u,
+            Err(e) => return Err(e),
+        };
+
+        let mut op = BinaryOp::EqEq; // just made multiply default op. If no valid op is found, then returns Err
+        let types = [TokenType::BangEq, TokenType::EqEq];
+
+        while (self.consume_first_match(&types)) {
+            op = match BinaryOp::try_from(&self.previous().token_type) {
+                Ok(o) => o,
+                Err(e) => return Err(()),
+            };
+
+            let rhs = match self.comparison() {
+                Ok(u) => Box::new(u),
+                Err(e) => return Err(e),
+            };
+
+            expr = Expr::Binary {
+                lhs: Box::new(expr),
+                op,
+                rhs,
+            };
+        }
+
+        Ok(expr)
+    }
+    fn comparison(&mut self) -> Result<Expr, ()> {
+        let mut expr = match self.term() {
+            Ok(u) => u,
+            Err(e) => return Err(e),
+        };
+
+        let mut op = BinaryOp::Gt; // just made multiply default op. If no valid op is found, then returns Err
+        let types = [
+            TokenType::Gt,
+            TokenType::GtEq,
+            TokenType::Lt,
+            TokenType::LtEq,
+        ];
+
+        while (self.consume_first_match(&types)) {
+            op = match BinaryOp::try_from(&self.previous().token_type) {
+                Ok(o) => o,
+                Err(e) => return Err(()),
+            };
+
+            let rhs = match self.term() {
+                Ok(u) => Box::new(u),
+                Err(e) => return Err(e),
+            };
+
+            expr = Expr::Binary {
+                lhs: Box::new(expr),
+                op,
+                rhs,
+            };
+        }
+
+        Ok(expr)
+    }
+    fn term(&mut self) -> Result<Expr, ()> {
+        let mut expr = match self.factor() {
+            Ok(u) => u,
+            Err(e) => return Err(e),
+        };
+
+        let mut op = BinaryOp::Plus; // just made multiply default op. If no valid op is found, then returns Err
+        let types = [TokenType::Minus, TokenType::Minus];
+
+        while (self.consume_first_match(&types)) {
+            op = match BinaryOp::try_from(&self.previous().token_type) {
+                Ok(o) => o,
+                Err(e) => return Err(()),
+            };
+
+            let rhs = match self.factor() {
+                Ok(u) => Box::new(u),
+                Err(e) => return Err(e),
+            };
+
+            expr = Expr::Binary {
+                lhs: Box::new(expr),
+                op,
+                rhs,
+            };
+        }
+
+        Ok(expr)
+    }
+    fn factor(&mut self) -> Result<Expr, ()> {
+        let mut expr = match self.unary() {
+            Ok(u) => u,
+            Err(e) => return Err(e),
+        };
+
+        let mut op = BinaryOp::Mult; // just made multiply default op. If no valid op is found, then returns Err
+        let types = [TokenType::Slash, TokenType::Star];
+
+        while (self.consume_first_match(&types)) {
+            op = match BinaryOp::try_from(&self.previous().token_type) {
+                Ok(o) => o,
+                Err(e) => return Err(()),
+            };
+
+            let rhs = match self.unary() {
+                Ok(u) => Box::new(u),
+                Err(e) => return Err(e),
+            };
+
+            expr = Expr::Binary {
+                lhs: Box::new(expr),
+                op,
+                rhs,
+            };
+        }
+
+        Ok(expr)
+    }
+    fn unary(&mut self) -> Result<Expr, ()> {
         let types = [TokenType::Minus, TokenType::Bang];
         if self.consume_first_match(&types) {
             if let Ok(op) = UnaryOp::try_from(&self.previous().token_type) {
-                let rhs = Box::new(self.unary());
-                return Expr::Unary { op, rhs };
+                let rhs = match self.unary() {
+                    Ok(u) => Box::new(u),
+                    Err(e) => return Err(e),
+                };
+                return Ok(Expr::Unary { op, rhs });
             }
         }
 
         match self.primary() {
-            Ok(p) => p,
-            Err(e) => panic!("Invalid primary token"),
+            Ok(p) => Ok(p),
+            Err(e) => Err(()),
         }
     }
     fn primary(&mut self) -> Result<Expr, ()> {
