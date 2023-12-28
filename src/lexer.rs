@@ -63,22 +63,22 @@ impl Lexer {
             Some(TokenType::Slash)
         } else if self.patterns.star.is_match(&lexeme) {
             Some(TokenType::Star)
-        } else if self.patterns.bang.is_match(&lexeme) {
-            Some(TokenType::Bang)
         } else if self.patterns.bang_eq.is_match(&lexeme) {
             Some(TokenType::BangEq)
-        } else if self.patterns.eq.is_match(&lexeme) {
-            Some(TokenType::Eq)
+        } else if self.patterns.bang.is_match(&lexeme) {
+            Some(TokenType::Bang)
         } else if self.patterns.eq_eq.is_match(&lexeme) {
             Some(TokenType::EqEq)
-        } else if self.patterns.gt.is_match(&lexeme) {
-            Some(TokenType::Gt)
+        } else if self.patterns.eq.is_match(&lexeme) {
+            Some(TokenType::Eq)
         } else if self.patterns.gt_eq.is_match(&lexeme) {
             Some(TokenType::GtEq)
-        } else if self.patterns.lt.is_match(&lexeme) {
-            Some(TokenType::Lt)
+        } else if self.patterns.gt.is_match(&lexeme) {
+            Some(TokenType::Gt)
         } else if self.patterns.lt_eq.is_match(&lexeme) {
             Some(TokenType::LtEq)
+        } else if self.patterns.lt.is_match(&lexeme) {
+            Some(TokenType::Lt)
         } else if self.patterns.str.is_match(&lexeme) {
             Some(TokenType::Str)
         } else if self.patterns.num.is_match(&lexeme) {

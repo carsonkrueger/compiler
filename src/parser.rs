@@ -20,6 +20,15 @@ pub struct Parser<'a> {
     cur_idx: usize,
 }
 
+pub enum ParseErr {
+    InvalidEquality,
+    InvalidComparison,
+    InvalidTerm,
+    InvalidFactor,
+    InvalidUnary,
+    InvalidPrimary,
+}
+
 /// expression     → equality ;
 /// equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 /// comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -31,8 +40,12 @@ impl<'a> Parser<'a> {
     pub fn new(tokens: &'a Vec<Token>) -> Self {
         Self { tokens, cur_idx: 0 }
     }
-    fn peek(&self) -> &Token {
-        &self.tokens[self.cur_idx]
+    fn peek(&self) -> Result<&Token, ()> {
+        if self.cur_idx < self.tokens.len() {
+            Ok(&self.tokens[self.cur_idx])
+        } else {
+            Err(())
+        }
     }
     fn previous(&self) -> &Token {
         &self.tokens[self.cur_idx - 1]
@@ -42,15 +55,24 @@ impl<'a> Parser<'a> {
     }
     /// consumes and advances IF current token matches token_type argument. Returns true if successfully consumed token.
     fn consume_match(&mut self, token_type: TokenType) -> bool {
-        let bool = self.peek().token_type == token_type;
+        let bool = match self.peek() {
+            Ok(t) => t.token_type == token_type,
+            Err(e) => false,
+        };
+
         if bool {
             self.advance();
         }
         bool
     }
     fn consume_first_match(&mut self, token_types: &[TokenType]) -> bool {
-        for t in token_types {
-            if &self.peek().token_type == t {
+        for typ in token_types {
+            let bool = match self.peek() {
+                Ok(t) => t.token_type == *typ,
+                Err(e) => return false,
+            };
+
+            if bool {
                 self.advance();
                 return true;
             }
@@ -60,7 +82,10 @@ impl<'a> Parser<'a> {
     fn expression(&mut self) -> Expr {
         match self.equality() {
             Ok(e) => e,
-            Err(e) => panic!("Error parsing expression"),
+            Err(e) => panic!(
+                "Error parsing expression at token: {:?}",
+                self.tokens[self.cur_idx]
+            ),
         }
     }
     fn equality(&mut self) -> Result<Expr, ()> {
@@ -201,28 +226,7 @@ impl<'a> Parser<'a> {
             Err(e) => Err(()),
         }
     }
-    fn primary(&mut self) -> Result<Expr, ()> {
-        // let types = [
-        //     TokenType::Num,
-        //     TokenType::Nil,
-        //     TokenType::True,
-        //     TokenType::False,
-        // ];
-        // if self.consume_first_match(&types) {
-        //     let t = self.previous();
-        //     match t.token_type {
-        //         TokenType::Num => Ok(Expr::LiteralExpr(Literal::Float(
-        //             t.lexeme.parse::<f32>().unwrap(),
-        //         ))),
-        //         TokenType::Nil => Ok(Expr::LiteralExpr(Literal::Nil)),
-        //         TokenType::True => Ok(Expr::LiteralExpr(Literal::Bool(true))),
-        //         TokenType::False => Ok(Expr::LiteralExpr(Literal::Bool(false))),
-        //         _ => Err(()),
-        //     }
-        // } else {
-        //     Err(())
-        // }
-
+    fn primary(&mut self) -> Result<Expr, ParseErr> {
         if self.consume_match(TokenType::Num) {
             let t = self.previous();
             Ok(Expr::LiteralExpr(Literal::Float(
@@ -238,7 +242,7 @@ impl<'a> Parser<'a> {
             let t = self.previous();
             Ok(Expr::LiteralExpr(Literal::Bool(false)))
         } else {
-            Err(())
+            Err(ParseErr::InvalidPrimary)
         }
     }
 }
