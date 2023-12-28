@@ -58,7 +58,10 @@ impl<'a> Parser<'a> {
         false
     }
     fn expression(&mut self) -> Expr {
-        unimplemented!()
+        match self.equality() {
+            Ok(e) => e,
+            Err(e) => panic!("Error parsing expression"),
+        }
     }
     fn equality(&mut self) -> Result<Expr, ()> {
         let mut expr = match self.comparison() {
@@ -237,5 +240,15 @@ impl<'a> Parser<'a> {
         } else {
             Err(())
         }
+    }
+}
+
+impl Iterator for Parser<'_> {
+    type Item = Expr;
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.cur_idx < self.tokens.len() {
+            return Some(self.expression());
+        }
+        None
     }
 }

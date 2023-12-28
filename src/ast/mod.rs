@@ -1,5 +1,6 @@
 use crate::token::token_type::TokenType;
 
+#[derive(Debug)]
 pub enum Literal {
     Nil,
     Bool(bool),
@@ -7,6 +8,7 @@ pub enum Literal {
     Float(f32),
 }
 
+#[derive(Debug)]
 pub enum Expr {
     LiteralExpr(Literal),
     Unary {
@@ -21,6 +23,7 @@ pub enum Expr {
     Grouping(Box<Expr>),
 }
 
+#[derive(Debug)]
 pub enum BinaryOp {
     Plus,
     Minus,
@@ -55,6 +58,7 @@ impl TryFrom<&TokenType> for BinaryOp {
     }
 }
 
+#[derive(Debug)]
 pub enum UnaryOp {
     Bang,
     Negate,

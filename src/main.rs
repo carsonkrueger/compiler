@@ -11,7 +11,7 @@ mod patterns;
 mod token;
 mod visitor;
 
-#[derive(Parser, Debug)]
+#[derive(clap::Parser, Debug)]
 struct Args {
     #[arg(short, long)]
     file_path: String,
@@ -22,4 +22,10 @@ fn main() {
 
     let mut lexer = Lexer::new(&args.file_path);
     let tokens: Vec<Token> = lexer.into_iter().collect();
+
+    let parser = crate::parser::Parser::new(&tokens);
+
+    for expr in parser {
+        println!("{:?}", expr);
+    }
 }
