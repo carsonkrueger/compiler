@@ -87,7 +87,7 @@ impl Patterns {
             interface: Regex::new(r"^interface").unwrap(),
             identifier: Regex::new(r"^[a-zA-z_][a-zA-z_0-9]*").unwrap(),
             word_pattern: Regex::new(r"\w").unwrap(),
-            any: Regex::new(r#"(\(|\)|\{|\}|,|-?([0-9]+\.[0-9]+|[0-9]+)|\.|-|\+|;|\/|\*|!|!=|=|==|>|>=|<|<=|".*"|[a-zA-z_][a-zA-z_0-9]*|\S+)"#).unwrap(),
+            any: Regex::new(r#"(\(|\)|\{|\}|,|-?([0-9]+\.[0-9]+|[0-9]+)|\.|-|\+|;|\/|\*|!=|!|==|=|>=|>|<=|<|".*"|[a-zA-z_][a-zA-z_0-9]*|\S+)"#).unwrap(),
         }
     }
 }
