@@ -93,6 +93,10 @@ impl Lexer {
             Some(TokenType::Else)
         } else if self.patterns.if_.is_match(&lexeme) {
             Some(TokenType::If)
+        } else if self.patterns.true_.is_match(&lexeme) {
+            Some(TokenType::True)
+        } else if self.patterns.false_.is_match(&lexeme) {
+            Some(TokenType::False)
         } else if self.patterns.identifier.is_match(&lexeme) {
             Some(TokenType::Identifier)
         } else {

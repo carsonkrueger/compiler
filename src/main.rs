@@ -23,6 +23,10 @@ fn main() {
     let mut lexer = Lexer::new(&args.file_path);
     let tokens: Vec<Token> = lexer.into_iter().collect();
 
+    // for t in &tokens {
+    //     println!("{}", t.lexeme);
+    // }
+
     let parser = crate::parser::Parser::new(&tokens);
 
     for expr in parser {
