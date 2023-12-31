@@ -1,4 +1,7 @@
-use crate::token::token_type::TokenType;
+use crate::{
+    token::token_type::TokenType,
+    visitor::{Evaluate, ExprVisitor},
+};
 
 #[derive(Debug)]
 pub enum Literal {
@@ -6,6 +9,15 @@ pub enum Literal {
     Bool(bool),
     Int(i32),
     Float(f32),
+}
+
+impl Evaluate for Expr {
+    fn accept(&self, v: &impl ExprVisitor) {
+        match &self {
+            Expr::LiteralExpr(_) => v.visit_literal_expr(&self),
+            _ => (),
+        }
+    }
 }
 
 #[derive(Debug)]

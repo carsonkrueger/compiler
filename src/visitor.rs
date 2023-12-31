@@ -1,7 +1,9 @@
-pub trait Visitor {
-    fn visit_unary_expr();
+use crate::ast::Expr;
+
+pub trait ExprVisitor {
+    fn visit_literal_expr<T>(&self, expr: &Expr) -> T;
 }
 
-pub trait VisitorAcceptor {
-    fn accept(v: impl Visitor);
+pub trait Evaluate {
+    fn accept(&self, v: &impl ExprVisitor);
 }

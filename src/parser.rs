@@ -5,28 +5,13 @@ use crate::{
     token::{token_type::TokenType, Token},
 };
 
-pub trait Parsable {
-    type OutErr;
-    type OutOk;
-    fn parse() -> Result<Self::OutOk, Self::OutErr>;
-}
-
-pub enum ParseError {
-    Invalid,
-}
-
 pub struct Parser<'a> {
     tokens: &'a Vec<Token>,
     cur_idx: usize,
 }
 
 pub enum ParseErr {
-    InvalidEquality,
-    InvalidComparison,
-    InvalidTerm,
-    InvalidFactor,
-    InvalidUnary,
-    InvalidPrimary,
+    InvalidExpr,
 }
 
 /// expression     → equality ;
@@ -242,7 +227,7 @@ impl<'a> Parser<'a> {
             let t = self.previous();
             Ok(Expr::LiteralExpr(Literal::Bool(false)))
         } else {
-            Err(ParseErr::InvalidPrimary)
+            Err(ParseErr::InvalidExpr)
         }
     }
 }
