@@ -12,6 +12,7 @@ pub struct Parser<'a> {
 
 pub enum ParseErr {
     InvalidExpr,
+    MissingRParen,
 }
 
 /// expression     → equality ;
@@ -25,11 +26,11 @@ impl<'a> Parser<'a> {
     pub fn new(tokens: &'a Vec<Token>) -> Self {
         Self { tokens, cur_idx: 0 }
     }
-    fn peek(&self) -> Result<&Token, ()> {
+    fn peek(&self) -> Result<&Token, ParseErr> {
         if self.cur_idx < self.tokens.len() {
             Ok(&self.tokens[self.cur_idx])
         } else {
-            Err(())
+            Err(ParseErr::InvalidExpr)
         }
     }
     fn previous(&self) -> &Token {
@@ -42,7 +43,7 @@ impl<'a> Parser<'a> {
     fn consume_match(&mut self, token_type: TokenType) -> bool {
         let bool = match self.peek() {
             Ok(t) => t.token_type == token_type,
-            Err(e) => false,
+            Err(_) => false,
         };
 
         if bool {
@@ -50,11 +51,12 @@ impl<'a> Parser<'a> {
         }
         bool
     }
+    /// consumes and advances IF current token matches any token_type in the token_types list argument. Returns true if successfully consumed token.
     fn consume_first_match(&mut self, token_types: &[TokenType]) -> bool {
         for typ in token_types {
             let bool = match self.peek() {
                 Ok(t) => t.token_type == *typ,
-                Err(e) => return false,
+                Err(_) => return false,
             };
 
             if bool {
@@ -64,16 +66,13 @@ impl<'a> Parser<'a> {
         }
         false
     }
-    fn expression(&mut self) -> Expr {
+    fn expression(&mut self) -> Result<Expr, ParseErr> {
         match self.equality() {
-            Ok(e) => e,
-            Err(e) => panic!(
-                "Error parsing expression at token: {:?}",
-                self.tokens[self.cur_idx]
-            ),
+            Ok(e) => Ok(e),
+            Err(e) => Err(e),
         }
     }
-    fn equality(&mut self) -> Result<Expr, ()> {
+    fn equality(&mut self) -> Result<Expr, ParseErr> {
         let mut expr = match self.comparison() {
             Ok(u) => u,
             Err(e) => return Err(e),
@@ -85,7 +84,7 @@ impl<'a> Parser<'a> {
         while (self.consume_first_match(&types)) {
             op = match BinaryOp::try_from(&self.previous().token_type) {
                 Ok(o) => o,
-                Err(e) => return Err(()),
+                Err(_) => return Err(ParseErr::InvalidExpr),
             };
 
             let rhs = match self.comparison() {
@@ -102,7 +101,7 @@ impl<'a> Parser<'a> {
 
         Ok(expr)
     }
-    fn comparison(&mut self) -> Result<Expr, ()> {
+    fn comparison(&mut self) -> Result<Expr, ParseErr> {
         let mut expr = match self.term() {
             Ok(u) => u,
             Err(e) => return Err(e),
@@ -119,7 +118,7 @@ impl<'a> Parser<'a> {
         while (self.consume_first_match(&types)) {
             op = match BinaryOp::try_from(&self.previous().token_type) {
                 Ok(o) => o,
-                Err(e) => return Err(()),
+                Err(_) => return Err(ParseErr::InvalidExpr),
             };
 
             let rhs = match self.term() {
@@ -136,7 +135,7 @@ impl<'a> Parser<'a> {
 
         Ok(expr)
     }
-    fn term(&mut self) -> Result<Expr, ()> {
+    fn term(&mut self) -> Result<Expr, ParseErr> {
         let mut expr = match self.factor() {
             Ok(u) => u,
             Err(e) => return Err(e),
@@ -148,7 +147,7 @@ impl<'a> Parser<'a> {
         while (self.consume_first_match(&types)) {
             op = match BinaryOp::try_from(&self.previous().token_type) {
                 Ok(o) => o,
-                Err(e) => return Err(()),
+                Err(_) => return Err(ParseErr::InvalidExpr),
             };
 
             let rhs = match self.factor() {
@@ -165,7 +164,7 @@ impl<'a> Parser<'a> {
 
         Ok(expr)
     }
-    fn factor(&mut self) -> Result<Expr, ()> {
+    fn factor(&mut self) -> Result<Expr, ParseErr> {
         let mut expr = match self.unary() {
             Ok(u) => u,
             Err(e) => return Err(e),
@@ -177,7 +176,7 @@ impl<'a> Parser<'a> {
         while (self.consume_first_match(&types)) {
             op = match BinaryOp::try_from(&self.previous().token_type) {
                 Ok(o) => o,
-                Err(e) => return Err(()),
+                Err(_) => return Err(ParseErr::InvalidExpr),
             };
 
             let rhs = match self.unary() {
@@ -194,7 +193,7 @@ impl<'a> Parser<'a> {
 
         Ok(expr)
     }
-    fn unary(&mut self) -> Result<Expr, ()> {
+    fn unary(&mut self) -> Result<Expr, ParseErr> {
         let types = [TokenType::Minus, TokenType::Bang];
         if self.consume_first_match(&types) {
             if let Ok(op) = UnaryOp::try_from(&self.previous().token_type) {
@@ -208,7 +207,7 @@ impl<'a> Parser<'a> {
 
         match self.primary() {
             Ok(p) => Ok(p),
-            Err(e) => Err(()),
+            Err(e) => Err(e),
         }
     }
     fn primary(&mut self) -> Result<Expr, ParseErr> {
@@ -218,14 +217,21 @@ impl<'a> Parser<'a> {
                 t.lexeme.parse::<f32>().unwrap(),
             )))
         } else if self.consume_match(TokenType::Nil) {
-            let t = self.previous();
             Ok(Expr::LiteralExpr(Literal::Nil))
         } else if self.consume_match(TokenType::True) {
-            let t = self.previous();
             Ok(Expr::LiteralExpr(Literal::Bool(true)))
         } else if self.consume_match(TokenType::False) {
-            let t = self.previous();
             Ok(Expr::LiteralExpr(Literal::Bool(false)))
+        } else if self.consume_match(TokenType::LParen) {
+            let expr = match self.expression() {
+                Ok(e) => e,
+                Err(e) => return Err(e),
+            };
+            if !self.consume_match(TokenType::RParen) {
+                Err(ParseErr::MissingRParen)
+            } else {
+                Ok(Expr::Grouping(Box::new(expr)))
+            }
         } else {
             Err(ParseErr::InvalidExpr)
         }
@@ -236,7 +242,10 @@ impl Iterator for Parser<'_> {
     type Item = Expr;
     fn next(&mut self) -> Option<Self::Item> {
         while self.cur_idx < self.tokens.len() {
-            return Some(self.expression());
+            match self.expression() {
+                Ok(e) => return Some(e),
+                Err(_) => return None,
+            }
         }
         None
     }
