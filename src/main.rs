@@ -8,8 +8,8 @@ mod lexer;
 mod parser;
 mod patterns;
 // mod statements;
+mod eval;
 mod token;
-mod visitor;
 
 #[derive(clap::Parser, Debug)]
 struct Args {
