@@ -1,7 +1,7 @@
-use crate::ast::Expr;
+use crate::ast::{Expr, Literal};
 
 pub trait ExprVisitor {
-    fn visit_literal_expr<T>(&self, expr: &Expr) -> T;
+    fn visit_literal_expr(expr: &Expr) -> &Literal;
 }
 
 pub trait Evaluate {

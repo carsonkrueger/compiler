@@ -14,7 +14,7 @@ pub enum Literal {
 impl Evaluate for Expr {
     fn accept(&self, v: &impl ExprVisitor) {
         match &self {
-            Expr::LiteralExpr(_) => v.visit_literal_expr(&self),
+            Expr::LiteralExpr(_) => Expr::visit_literal_expr(&self),
             _ => (),
         }
     }
@@ -83,6 +83,15 @@ impl TryFrom<&TokenType> for UnaryOp {
             TokenType::Bang => Ok(UnaryOp::Bang),
             TokenType::Minus => Ok(UnaryOp::Negate),
             _ => Err(()),
+        }
+    }
+}
+
+impl ExprVisitor for Expr {
+    fn visit_literal_expr(expr: &Expr) -> &Literal {
+        match expr {
+            Expr::LiteralExpr(e) => e,
+            _ => panic!("Visiting invalid literal expression: {:?}", expr),
         }
     }
 }
