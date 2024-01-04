@@ -2,11 +2,11 @@ use crate::vm::memory::Memory;
 use super::{register::Register, instruction::Instruction, opcode::Opcode};
 
 pub struct Cpu {
-    memory: Memory,
-    registers: [Register; 64],
-    pc: usize,
-    hp: usize,
-    sp: usize
+    pub memory: Memory,
+    pub registers: [Register; 64],
+    pub pc: usize,
+    pub hp: usize,
+    pub sp: usize
 }
 
 impl Cpu {
@@ -19,9 +19,9 @@ impl Cpu {
             let instruction = self.decode(&bytes);
             self.pc += 12;
             match self.execute(&instruction) {
-                ExecuteResult::Success => continue,
-                ExecuteResult::Error => panic!("Error executing instruction: {:?}", instruction),
+                ExecuteResult::Continue => continue,
                 ExecuteResult::Exit => break,
+                ExecuteResult::Error => panic!("Error executing instruction: {:?}", instruction),
             }
         }
     }
@@ -48,7 +48,7 @@ impl Cpu {
 }
 
 pub enum ExecuteResult {
-    Success,
+    Continue,
+    Exit,
     Error,
-    Exit
 }
