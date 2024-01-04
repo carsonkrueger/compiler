@@ -38,8 +38,8 @@ pub enum Opcode {
     trp,
 }
 
-impl Into<usize> for Opcode {
-    fn into(self) -> usize {
+impl Into<i32> for Opcode {
+    fn into(self) -> i32 {
         match self {
             Self::jmp => 1,
             Self::jmr => 2,
@@ -78,6 +78,50 @@ impl Into<usize> for Opcode {
             Self::allc => 36,
             Self::allc2 => 37,
             Self::trp => 21,
+            // _ => return Err(OpcodeErr::InvalidOpcode),
+        }
+    }
+}
+
+impl From<i32> for Opcode {
+    fn from(value: i32) -> Self {
+       match value {
+            1 => Self::jmp,
+            2 => Self::jmr,
+            3 => Self::bnz,
+            4 => Self::bgt,
+            5 => Self::blt,
+            6 => Self::brz,
+            7 => Self::mov,
+            31 => Self::mov2,
+            8 => Self::lda,
+            9 => Self::str,
+            22 => Self::str2,
+            10 => Self::ldr,
+            23 => Self::ldr2,
+            11 => Self::stb,
+            24 => Self::stb,
+            12 => Self::ldb,
+            25 => Self::ldb2,
+            40 => Self::push,
+            41 => Self::pop,
+            42 => Self::peek,
+            18 => Self::and,
+            19 => Self::or,
+            39 => Self::not,
+            20 => Self::cmp,
+            32 => Self::cmpi,
+            13 => Self::add,
+            14 => Self::add,
+            15 => Self::sub,
+            16 => Self::mul,
+            33 => Self::muli,
+            17 => Self::div,
+            34 => Self::divi,
+            35 => Self::alci,
+            36 => Self::allc,
+            37 => Self::allc2,
+            21 => Self::trp,
             // _ => return Err(OpcodeErr::InvalidOpcode),
         }
     }
