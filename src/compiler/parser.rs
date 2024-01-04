@@ -1,8 +1,11 @@
 use core::panic;
 
-use crate::{
-    ast::{BinaryOp, Expr, Literal, UnaryOp},
-    token::{token_type::TokenType, Token},
+use crate::compiler::{
+    ast::{
+        expr::{BinaryOp, Expr, UnaryOp},
+        literal::Literal,
+    },
+    token::{Token, TokenType},
 };
 
 pub struct Parser<'a> {

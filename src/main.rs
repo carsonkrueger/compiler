@@ -1,15 +1,10 @@
+use crate::compiler::{lexer::Lexer, token::Token};
 use clap::Parser;
-use lexer::Lexer;
-use token::Token;
 
-mod ast;
-// mod expr;
-mod lexer;
-mod parser;
-mod patterns;
-// mod statements;
-mod eval;
-mod token;
+mod asm;
+mod compiler;
+mod util;
+mod vm;
 
 #[derive(clap::Parser, Debug)]
 struct Args {
@@ -27,7 +22,7 @@ fn main() {
     //     println!("{}", t.lexeme);
     // }
 
-    let parser = crate::parser::Parser::new(&tokens);
+    let parser = crate::compiler::parser::Parser::new(&tokens);
 
     for expr in parser {
         println!("{:?}", expr);
