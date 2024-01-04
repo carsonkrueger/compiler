@@ -1,4 +1,8 @@
-use std::{collections::VecDeque, fs::File, io::BufReader};
+use std::{
+    collections::VecDeque,
+    fs::File,
+    io::{BufRead, BufReader},
+};
 
 use crate::asm::{
     patterns::Patterns,
@@ -44,128 +48,87 @@ impl Lexer {
     fn lexeme_type(&self, lexeme: &String) -> Option<TokenType> {
         if self.patterns.label.is_match(&lexeme) {
             Some(TokenType::label)
-        }
-        if self.patterns.i_int.is_match(&lexeme) {
+        } else if self.patterns.i_int.is_match(&lexeme) {
             Some(TokenType::i_int)
-        }
-        if self.patterns.i_str.is_match(&lexeme) {
+        } else if self.patterns.i_str.is_match(&lexeme) {
             Some(TokenType::i_str)
-        }
-        if self.patterns.i_char.is_match(&lexeme) {
+        } else if self.patterns.i_char.is_match(&lexeme) {
             Some(TokenType::i_char)
-        }
-        if self.patterns.comma.is_match(&lexeme) {
+        } else if self.patterns.comma.is_match(&lexeme) {
             Some(TokenType::comma)
-        }
-        if self.patterns.int_dir.is_match(&lexeme) {
+        } else if self.patterns.int_dir.is_match(&lexeme) {
             Some(TokenType::int_dir)
-        }
-        if self.patterns.byt_dir.is_match(&lexeme) {
+        } else if self.patterns.byt_dir.is_match(&lexeme) {
             Some(TokenType::byt_dir)
-        }
-        if self.patterns.str_dir.is_match(&lexeme) {
+        } else if self.patterns.str_dir.is_match(&lexeme) {
             Some(TokenType::str_dir)
-        }
-        if self.patterns.rg.is_match(&lexeme) {
+        } else if self.patterns.rg.is_match(&lexeme) {
             Some(TokenType::rg)
-        }
-        if self.patterns.pc.is_match(&lexeme) {
+        } else if self.patterns.pc.is_match(&lexeme) {
             Some(TokenType::pc)
-        }
-        if self.patterns.jmp.is_match(&lexeme) {
+        } else if self.patterns.jmp.is_match(&lexeme) {
             Some(TokenType::jmp)
-        }
-        if self.patterns.jmr.is_match(&lexeme) {
+        } else if self.patterns.jmr.is_match(&lexeme) {
             Some(TokenType::jmr)
-        }
-        if self.patterns.bnz.is_match(&lexeme) {
+        } else if self.patterns.bnz.is_match(&lexeme) {
             Some(TokenType::bnz)
-        }
-        if self.patterns.bgt.is_match(&lexeme) {
+        } else if self.patterns.bgt.is_match(&lexeme) {
             Some(TokenType::bgt)
-        }
-        if self.patterns.blt.is_match(&lexeme) {
+        } else if self.patterns.blt.is_match(&lexeme) {
             Some(TokenType::blt)
-        }
-        if self.patterns.brz.is_match(&lexeme) {
+        } else if self.patterns.brz.is_match(&lexeme) {
             Some(TokenType::brz)
-        }
-        if self.patterns.bal.is_match(&lexeme) {
+        } else if self.patterns.bal.is_match(&lexeme) {
             Some(TokenType::bal)
-        }
-        if self.patterns.mov.is_match(&lexeme) {
+        } else if self.patterns.mov.is_match(&lexeme) {
             Some(TokenType::mov)
-        }
-        if self.patterns.movi.is_match(&lexeme) {
+        } else if self.patterns.movi.is_match(&lexeme) {
             Some(TokenType::movi)
-        }
-        if self.patterns.lda.is_match(&lexeme) {
+        } else if self.patterns.lda.is_match(&lexeme) {
             Some(TokenType::lda)
-        }
-        if self.patterns.str.is_match(&lexeme) {
+        } else if self.patterns.str.is_match(&lexeme) {
             Some(TokenType::str)
-        }
-        if self.patterns.ldr.is_match(&lexeme) {
+        } else if self.patterns.ldr.is_match(&lexeme) {
             Some(TokenType::ldr)
-        }
-        if self.patterns.stb.is_match(&lexeme) {
+        } else if self.patterns.stb.is_match(&lexeme) {
             Some(TokenType::stb)
-        }
-        if self.patterns.ldb.is_match(&lexeme) {
+        } else if self.patterns.ldb.is_match(&lexeme) {
             Some(TokenType::ldb)
-        }
-        if self.patterns.push.is_match(&lexeme) {
+        } else if self.patterns.push.is_match(&lexeme) {
             Some(TokenType::push)
-        }
-        if self.patterns.pop.is_match(&lexeme) {
+        } else if self.patterns.pop.is_match(&lexeme) {
             Some(TokenType::pop)
-        }
-        if self.patterns.peek.is_match(&lexeme) {
+        } else if self.patterns.peek.is_match(&lexeme) {
             Some(TokenType::peek)
-        }
-        if self.patterns.and.is_match(&lexeme) {
+        } else if self.patterns.and.is_match(&lexeme) {
             Some(TokenType::and)
-        }
-        if self.patterns.or.is_match(&lexeme) {
+        } else if self.patterns.or.is_match(&lexeme) {
             Some(TokenType::or)
-        }
-        if self.patterns.not.is_match(&lexeme) {
+        } else if self.patterns.not.is_match(&lexeme) {
             Some(TokenType::not)
-        }
-        if self.patterns.cmp.is_match(&lexeme) {
+        } else if self.patterns.cmp.is_match(&lexeme) {
             Some(TokenType::cmp)
-        }
-        if self.patterns.cmpi.is_match(&lexeme) {
+        } else if self.patterns.cmpi.is_match(&lexeme) {
             Some(TokenType::cmpi)
-        }
-        if self.patterns.add.is_match(&lexeme) {
+        } else if self.patterns.add.is_match(&lexeme) {
             Some(TokenType::add)
-        }
-        if self.patterns.adi.is_match(&lexeme) {
+        } else if self.patterns.adi.is_match(&lexeme) {
             Some(TokenType::adi)
-        }
-        if self.patterns.sub.is_match(&lexeme) {
+        } else if self.patterns.sub.is_match(&lexeme) {
             Some(TokenType::sub)
-        }
-        if self.patterns.mul.is_match(&lexeme) {
+        } else if self.patterns.mul.is_match(&lexeme) {
             Some(TokenType::mul)
-        }
-        if self.patterns.muli.is_match(&lexeme) {
+        } else if self.patterns.muli.is_match(&lexeme) {
             Some(TokenType::muli)
-        }
-        if self.patterns.div.is_match(&lexeme) {
+        } else if self.patterns.div.is_match(&lexeme) {
             Some(TokenType::div)
-        }
-        if self.patterns.divi.is_match(&lexeme) {
+        } else if self.patterns.divi.is_match(&lexeme) {
             Some(TokenType::divi)
-        }
-        if self.patterns.alci.is_match(&lexeme) {
-            Some(TokenType::acli)
-        }
-        if self.patterns.allc.is_match(&lexeme) {
+        } else if self.patterns.alci.is_match(&lexeme) {
+            Some(TokenType::alci)
+        } else if self.patterns.allc.is_match(&lexeme) {
             Some(TokenType::allc)
-        }
-        if self.patterns.trp.is_match(&lexeme) {
+        } else if self.patterns.trp.is_match(&lexeme) {
             Some(TokenType::trp)
         } else {
             None

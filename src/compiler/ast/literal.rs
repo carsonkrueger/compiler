@@ -88,17 +88,17 @@ impl std::cmp::PartialOrd for Literal {
     fn ge(&self, other: &Self) -> bool {
         match self {
             Literal::Float(f1) => {
-                f1 >= match other {
-                    Literal::Float(f2) => f2,
-                    Literal::Int(i2) => i2 as &f32,
-                    _ => false,
+                *f1 >= match other {
+                    Literal::Float(f2) => *f2,
+                    Literal::Int(i2) => *i2 as f32,
+                    _ => return false,
                 }
             }
             Literal::Int(i1) => {
-                i1 >= match other {
-                    Literal::Float(f2) => f2 as &i32,
-                    Literal::Int(i2) => i2,
-                    _ => false,
+                *i1 >= match other {
+                    Literal::Float(f2) => *f2 as i32,
+                    Literal::Int(i2) => *i2,
+                    _ => return false,
                 }
             }
             _ => false,
@@ -107,17 +107,17 @@ impl std::cmp::PartialOrd for Literal {
     fn gt(&self, other: &Self) -> bool {
         match self {
             Literal::Float(f1) => {
-                f1 > match other {
-                    Literal::Float(f2) => f2,
-                    Literal::Int(i2) => i2 as &f32,
-                    _ => false,
+                *f1 > match other {
+                    Literal::Float(f2) => *f2,
+                    Literal::Int(i2) => *i2 as f32,
+                    _ => return false,
                 }
             }
             Literal::Int(i1) => {
-                i1 > match other {
-                    Literal::Float(f2) => f2 as &i32,
-                    Literal::Int(i2) => i2,
-                    _ => false,
+                *i1 > match other {
+                    Literal::Float(f2) => *f2 as i32,
+                    Literal::Int(i2) => *i2,
+                    _ => return false,
                 }
             }
             _ => false,
@@ -126,17 +126,17 @@ impl std::cmp::PartialOrd for Literal {
     fn le(&self, other: &Self) -> bool {
         match self {
             Literal::Float(f1) => {
-                f1 <= match other {
-                    Literal::Float(f2) => f2,
-                    Literal::Int(i2) => i2 as &f32,
-                    _ => false,
+                *f1 <= match other {
+                    Literal::Float(f2) => *f2,
+                    Literal::Int(i2) => *i2 as f32,
+                    _ => return false,
                 }
             }
             Literal::Int(i1) => {
-                i1 <= match other {
-                    Literal::Float(f2) => f2 as &i32,
-                    Literal::Int(i2) => i2,
-                    _ => false,
+                *i1 <= match other {
+                    Literal::Float(f2) => *f2 as i32,
+                    Literal::Int(i2) => *i2,
+                    _ => return false,
                 }
             }
             _ => false,
@@ -145,17 +145,17 @@ impl std::cmp::PartialOrd for Literal {
     fn lt(&self, other: &Self) -> bool {
         match self {
             Literal::Float(f1) => {
-                f1 < match other {
-                    Literal::Float(f2) => f2,
-                    Literal::Int(i2) => i2 as &f32,
-                    _ => false,
+                *f1 < match other {
+                    Literal::Float(f2) => *f2,
+                    Literal::Int(i2) => *i2 as f32,
+                    _ => return false,
                 }
             }
             Literal::Int(i1) => {
-                i1 < match other {
-                    Literal::Float(f2) => f2 as &i32,
-                    Literal::Int(i2) => i2,
-                    _ => false,
+                *i1 < match other {
+                    Literal::Float(f2) => *f2 as i32,
+                    Literal::Int(i2) => *i2,
+                    _ => return false,
                 }
             }
             _ => false,
@@ -175,15 +175,22 @@ impl std::cmp::PartialOrd for Literal {
 }
 
 impl std::cmp::Ord for Literal {
-    fn cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         if self < other {
-            Some(std::cmp::Ordering::Less)
+            std::cmp::Ordering::Less
         } else if self > other {
-            Some(std::cmp::Ordering::Less)
+            std::cmp::Ordering::Greater
         } else if self == other {
-            Some(std::cmp::Ordering::Less)
+            std::cmp::Ordering::Equal
         } else {
-            None
+            panic!("Invalid comparison between {:?} and {:?}", self, other);
         }
     }
+    // fn cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+
+    // }
+}
+
+impl std::cmp::Eq for Literal {
+    fn assert_receiver_is_total_eq(&self) {}
 }

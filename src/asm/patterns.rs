@@ -56,10 +56,10 @@ pub struct Patterns {
 impl Patterns {
     pub fn new() -> Self {
         Self {
-            label: Regex::new("^[A-Za-z][A-Za-z0-9_]*:"),
-            i_int: Regex::new("^#(0|[1-9][0-9]*)"),
-            i_char: Regex::new("^'.'"),
-            i_str: Regex::new("\".*\""),
+            label: Regex::new("^[A-Za-z][A-Za-z0-9_]*:").unwrap(),
+            i_int: Regex::new("^#(0|[1-9][0-9]*)").unwrap(),
+            i_char: Regex::new("^'.'").unwrap(),
+            i_str: Regex::new("\".*\"").unwrap(),
             comma: Regex::new("^,").unwrap(),
             int_dir: Regex::new("^.INT").unwrap(),
             byt_dir: Regex::new("^.BYT").unwrap(),
@@ -99,7 +99,7 @@ impl Patterns {
             alci: Regex::new("^ALCI").unwrap(),
             allc: Regex::new("^ALLC").unwrap(),
             trp: Regex::new("^TRP").unwrap(),
-            any: Regex::new("\\.?\\w*|,|#[0-9]+|\".*\""),
+            any: Regex::new("\\.?\\w*|,|#[0-9]+|\".*\"").unwrap(),
         }
     }
 }

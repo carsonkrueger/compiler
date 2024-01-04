@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Opcode {
     jmp,
     jmr,
@@ -47,20 +48,20 @@ impl Into<i32> for Opcode {
             Self::bgt => 4,
             Self::blt => 5,
             Self::brz => 6,
+            Self::bal => 43,
             Self::mov => 7,
-            Self::mov2 => 31,
+            Self::movi => 31,
             Self::lda => 8,
             Self::str => 9,
             Self::str2 => 22,
             Self::ldr => 10,
             Self::ldr2 => 23,
             Self::stb => 11,
-            Self::stb => 24,
+            Self::stb2 => 24,
             Self::ldb => 12,
             Self::ldb2 => 25,
             Self::push => 40,
             Self::pop => 41,
-            Self::push => 42,
             Self::peek => 42,
             Self::and => 18,
             Self::or => 19,
@@ -68,7 +69,7 @@ impl Into<i32> for Opcode {
             Self::cmp => 20,
             Self::cmpi => 32,
             Self::add => 13,
-            Self::add => 14,
+            Self::adi => 14,
             Self::sub => 15,
             Self::mul => 16,
             Self::muli => 33,
@@ -83,24 +84,26 @@ impl Into<i32> for Opcode {
     }
 }
 
-impl From<i32> for Opcode {
-    fn from(value: i32) -> Self {
-       match value {
+impl TryFrom<i32> for Opcode {
+    type Error = OpcodeErr;
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        Ok(match value {
             1 => Self::jmp,
             2 => Self::jmr,
             3 => Self::bnz,
             4 => Self::bgt,
             5 => Self::blt,
             6 => Self::brz,
+            43 => Self::bal,
             7 => Self::mov,
-            31 => Self::mov2,
+            31 => Self::movi,
             8 => Self::lda,
             9 => Self::str,
             22 => Self::str2,
             10 => Self::ldr,
             23 => Self::ldr2,
             11 => Self::stb,
-            24 => Self::stb,
+            24 => Self::stb2,
             12 => Self::ldb,
             25 => Self::ldb2,
             40 => Self::push,
@@ -112,7 +115,7 @@ impl From<i32> for Opcode {
             20 => Self::cmp,
             32 => Self::cmpi,
             13 => Self::add,
-            14 => Self::add,
+            14 => Self::adi,
             15 => Self::sub,
             16 => Self::mul,
             33 => Self::muli,
@@ -122,7 +125,12 @@ impl From<i32> for Opcode {
             36 => Self::allc,
             37 => Self::allc2,
             21 => Self::trp,
-            // _ => return Err(OpcodeErr::InvalidOpcode),
-        }
+            op => return Err(OpcodeErr::InvalidOpcode(op)),
+        })
     }
+}
+
+#[derive(Debug)]
+pub enum OpcodeErr {
+    InvalidOpcode(i32),
 }
