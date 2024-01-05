@@ -1,4 +1,4 @@
-use crate::util::endianness::{self, as_i32_be, i32_bytes};
+use crate::util::{endianness::{self, as_i32_be, i32_bytes}, reportable::Reportable};
 
 pub struct Memory {
     bytes: [u8; 102400],
@@ -8,18 +8,6 @@ pub struct Memory {
     heap_size: usize,
     stack_size: usize,
     // code_seg_size: usize,
-}
-
-#[derive(Debug)]
-pub enum MemoryErr {
-    OutOfMemoryBounds,
-    OutOfDataSegBounds,
-    OutOfCodeSegBounds,
-    SetInsideCodeSegBounds,
-    StackOverflow,
-    StackUnderflow,
-    HeapOverflow,
-    HeapUnderflow,
 }
 
 impl Memory {
@@ -73,7 +61,7 @@ impl Memory {
     }
     pub fn set_i32(&mut self, idx: usize, int: i32) -> Result<(), MemoryErr> {
         if !self.in_code_seg(idx) || !self.in_code_seg(idx + 3) {
-            return Err(MemoryErr::SetInsideCodeSegBounds);
+            return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
         let bytes = i32_bytes(int);
         self.bytes[idx] = bytes[0];
@@ -84,39 +72,66 @@ impl Memory {
     }
     pub fn set_u8(&mut self, idx: usize, int: u8) -> Result<(), MemoryErr> {
         if !self.in_code_seg(idx) {
-            return Err(MemoryErr::SetInsideCodeSegBounds);
+            return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
         self.bytes[idx] = int;
         Ok(())
     }
     pub fn get_any_i32(&self, idx: usize) -> Result<i32, MemoryErr> {
         if !self.in_bounds(idx) || !self.in_bounds(idx + 3) {
-            return Err(MemoryErr::OutOfMemoryBounds);
+            return Err(MemoryErr::OutOfMemoryBounds(idx));
         }
         Ok(self.get_i32(idx))
     }
     pub fn get_any_u8(&self, idx: usize) -> Result<u8, MemoryErr> {
         if self.in_bounds(idx) {
-            return Err(MemoryErr::OutOfMemoryBounds);
+            return Err(MemoryErr::OutOfMemoryBounds(idx));
         }
         Ok(self.get_u8(idx))
     }
     pub fn get_data_seg_u8(&self, idx: usize) -> Result<u8, MemoryErr> {
         if !self.in_data_seg(idx) {
-            return Err(MemoryErr::OutOfDataSegBounds);
+            return Err(MemoryErr::OutOfDataSegBounds(idx));
         }
         Ok(self.get_u8(idx))
     }
     pub fn get_data_seg_i32(&self, idx: usize) -> Result<i32, MemoryErr> {
         if !self.in_data_seg(idx) || !self.in_data_seg(idx + 3) {
-            return Err(MemoryErr::OutOfDataSegBounds);
+            return Err(MemoryErr::OutOfDataSegBounds(idx));
         }
         Ok(self.get_i32(idx))
     }
     pub fn get_code_seg_i32(&self, idx: usize) -> Result<i32, MemoryErr> {
         if !self.in_code_seg(idx) || !self.in_code_seg(idx + 3) {
-            return Err(MemoryErr::OutOfCodeSegBounds);
+            return Err(MemoryErr::OutOfCodeSegBounds(idx));
         }
         Ok(self.get_i32(idx))
+    }
+}
+
+#[derive(Debug)]
+pub enum MemoryErr {
+    OutOfMemoryBounds(usize),
+    OutOfDataSegBounds(usize),
+    OutOfCodeSegBounds(usize),
+    SetInsideCodeSegBounds(usize),
+    StackOverflow(usize),
+    StackUnderflow(usize),
+    HeapOverflow(usize),
+    HeapUnderflow(usize),
+}
+
+impl Reportable for MemoryErr {
+    fn report(&self) -> String {
+        match self {
+            MemoryErr::HeapOverflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::HeapUnderflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::OutOfCodeSegBounds(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::OutOfDataSegBounds(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::OutOfMemoryBounds(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::SetInsideCodeSegBounds(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::StackOverflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::StackUnderflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
+        }
     }
 }
