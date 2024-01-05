@@ -1,7 +1,14 @@
-use crate::util::{endianness::{self, as_i32_be, i32_bytes}, reportable::Reportable};
+use crate::util::{
+    endianness::{as_i32_be, i32_bytes},
+    reportable::Reportable,
+};
+use std::fs::File;
+use std::io::{self, Read};
+
+const mem_capacity: usize = 102400;
 
 pub struct Memory {
-    bytes: [u8; 102400],
+    bytes: [u8; mem_capacity],
     data_seg_start: usize,
     code_seg_start: usize,
     heap_start: usize,
@@ -11,17 +18,30 @@ pub struct Memory {
 }
 
 impl Memory {
-    pub fn new(bytes: [u8; 102400]) -> Self {
-        let first_bytes = [bytes[0], bytes[1], bytes[2], bytes[3]];
-        let init_pc = as_i32_be(&first_bytes) as usize;
-        Self {
-            bytes,
+    pub fn new(file_path: String) -> Self {
+        let mut file = File::open(file_path).expect("Could not open binary file");
+
+        let mut mem = Self {
+            bytes: [0; 102400],
             data_seg_start: 4,
-            code_seg_start: init_pc,
-            heap_start: init_pc,
-            heap_size: init_pc,
-            stack_size: bytes.len() - 1,
-        }
+            code_seg_start: 4,
+            heap_start: file
+                .metadata()
+                .expect("Could not get metadata of binary file")
+                .len() as usize,
+            heap_size: 0,
+            stack_size: 0,
+        };
+
+        file.read_exact(&mut mem.bytes);
+        let first_bytes = [mem.bytes[0], mem.bytes[1], mem.bytes[2], mem.bytes[3]];
+        let init_pc = as_i32_be(&first_bytes) as usize;
+        mem.code_seg_start = init_pc;
+
+        mem
+    }
+    pub fn capacity() -> usize {
+        mem_capacity
     }
     fn in_data_seg(&self, idx: usize) -> bool {
         idx >= self.data_seg_start && idx < self.code_seg_start
@@ -70,11 +90,11 @@ impl Memory {
         self.bytes[idx + 3] = bytes[3];
         Ok(())
     }
-    pub fn set_u8(&mut self, idx: usize, int: u8) -> Result<(), MemoryErr> {
+    pub fn set_u8(&mut self, idx: usize, byte: u8) -> Result<(), MemoryErr> {
         if !self.in_code_seg(idx) {
             return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
-        self.bytes[idx] = int;
+        self.bytes[idx] = byte;
         Ok(())
     }
     pub fn get_any_i32(&self, idx: usize) -> Result<i32, MemoryErr> {
@@ -109,6 +129,19 @@ impl Memory {
     }
 }
 
+impl Default for Memory {
+    fn default() -> Self {
+        Self {
+            bytes: [0; 102400],
+            data_seg_start: 4,
+            code_seg_start: 4,
+            heap_start: 4,
+            stack_size: 0,
+            heap_size: 0,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum MemoryErr {
     OutOfMemoryBounds(usize),
@@ -126,10 +159,18 @@ impl Reportable for MemoryErr {
         match self {
             MemoryErr::HeapOverflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
             MemoryErr::HeapUnderflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
-            MemoryErr::OutOfCodeSegBounds(p) => format!("Memory error at position: {}\n{:?}", p, self),
-            MemoryErr::OutOfDataSegBounds(p) => format!("Memory error at position: {}\n{:?}", p, self),
-            MemoryErr::OutOfMemoryBounds(p) => format!("Memory error at position: {}\n{:?}", p, self),
-            MemoryErr::SetInsideCodeSegBounds(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::OutOfCodeSegBounds(p) => {
+                format!("Memory error at position: {}\n{:?}", p, self)
+            }
+            MemoryErr::OutOfDataSegBounds(p) => {
+                format!("Memory error at position: {}\n{:?}", p, self)
+            }
+            MemoryErr::OutOfMemoryBounds(p) => {
+                format!("Memory error at position: {}\n{:?}", p, self)
+            }
+            MemoryErr::SetInsideCodeSegBounds(p) => {
+                format!("Memory error at position: {}\n{:?}", p, self)
+            }
             MemoryErr::StackOverflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
             MemoryErr::StackUnderflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
         }
