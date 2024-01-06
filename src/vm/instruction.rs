@@ -325,18 +325,38 @@ impl Instruction {
         rd.set_i32(rd.get_i32() / self.op2);
         ExecuteResult::Continue
     }
-    // fn trp0(&self, cpu: &mut Cpu) -> ExecuteResult {
-
-    // }
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-    // fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
+    pub fn trp(&self, cpu: &mut Cpu) -> ExecuteResult {
+        match self.op1 {
+            0 => self.trp0(cpu),
+            1 => self.trp1(cpu),
+            3 => self.trp3(cpu),
+            _ => ExecuteResult::Error(VMErr::CpuErr(super::cpu::CpuErr::InvalidInstruction(
+                self.clone(),
+            ))),
+        }
+    }
+    fn trp0(&self, cpu: &mut Cpu) -> ExecuteResult {
+        ExecuteResult::Exit
+    }
+    fn trp1(&self, cpu: &mut Cpu) -> ExecuteResult {
+        let r3 = match cpu.rg_at_ref(3) {
+            Ok(r) => r,
+            Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
+        };
+        print!("{}", r3.get_i32());
+        ExecuteResult::Continue
+    }
+    // fn trp2(&self, cpu: &mut Cpu) -> ExecuteResult {}
+    fn trp3(&self, cpu: &mut Cpu) -> ExecuteResult {
+        let r3 = match cpu.rg_at_ref(3) {
+            Ok(r) => r,
+            Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
+        };
+        print!("{}", r3.get_u8() as char);
+        ExecuteResult::Continue
+    }
+    // fn trp4(&self, cpu: &mut Cpu) -> ExecuteResult {}
+    // fn trp5(&self, cpu: &mut Cpu) -> ExecuteResult {}
 }
 
 pub enum InstructionErr {

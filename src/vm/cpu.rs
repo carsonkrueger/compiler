@@ -116,7 +116,7 @@ impl Cpu {
             // Opcode::alci => instruction.alci(self),
             // Opcode::allc => instruction.allc(self),
             // Opcode::allc2 => instruction.allc2(self),
-            // Opcode::trp => instruction.(self),
+            Opcode::trp => instruction.trp(self),
             _ => ExecuteResult::Error(VMErr::CpuErr(CpuErr::InvalidInstruction(
                 instruction.clone(),
             ))),

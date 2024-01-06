@@ -1,5 +1,5 @@
 use crate::util::{
-    endianness::{as_i32_be, i32_bytes_be},
+    endianness::{as_i32_be, as_i32_le, i32_bytes_be, i32_bytes_le},
     reportable::Reportable,
 };
 use std::fs::File;
@@ -35,7 +35,7 @@ impl Memory {
 
         file.read_exact(&mut mem.bytes);
         let first_bytes = [mem.bytes[0], mem.bytes[1], mem.bytes[2], mem.bytes[3]];
-        let init_pc = as_i32_be(&first_bytes) as usize;
+        let init_pc = as_i32_le(&first_bytes) as usize;
         mem.code_seg_start = init_pc;
 
         mem
@@ -50,13 +50,13 @@ impl Memory {
         idx >= self.code_seg_start && idx < self.heap_start
     }
     fn in_free_memory(&self, idx: usize) -> bool {
-        idx >= self.next_heap_idx() && idx <= self.next_stack_dix()
+        idx >= self.next_heap_idx() && idx <= self.next_stack_idx()
     }
     fn in_heap(&self, idx: usize) -> bool {
         idx >= self.heap_start && idx < self.next_heap_idx()
     }
     fn in_stack(&self, idx: usize) -> bool {
-        idx > self.next_stack_dix() && idx < self.bytes.len()
+        idx > self.next_stack_idx() && idx < self.bytes.len()
     }
     fn in_bounds(&self, idx: usize) -> bool {
         idx >= 0 && idx < self.bytes.len()
@@ -64,7 +64,7 @@ impl Memory {
     fn next_heap_idx(&self) -> usize {
         self.heap_start + self.heap_size
     }
-    fn next_stack_dix(&self) -> usize {
+    fn next_stack_idx(&self) -> usize {
         self.bytes.len() - 1 - self.stack_size
     }
     fn get_u8(&self, idx: usize) -> u8 {
@@ -77,13 +77,13 @@ impl Memory {
             self.bytes[idx + 2],
             self.bytes[idx + 3],
         ];
-        as_i32_be(&bytes)
+        as_i32_le(&bytes)
     }
     pub fn set_i32(&mut self, idx: usize, int: i32) -> Result<(), MemoryErr> {
         if !self.in_code_seg(idx) || !self.in_code_seg(idx + 3) {
             return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
-        let bytes = i32_bytes_be(int);
+        let bytes = i32_bytes_le(int);
         self.bytes[idx] = bytes[0];
         self.bytes[idx + 1] = bytes[1];
         self.bytes[idx + 2] = bytes[2];
