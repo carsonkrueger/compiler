@@ -1,5 +1,5 @@
 use crate::util::{
-    endianness::{as_i32_be, i32_bytes},
+    endianness::{as_i32_be, i32_bytes_be},
     reportable::Reportable,
 };
 use std::fs::File;
@@ -18,7 +18,7 @@ pub struct Memory {
 }
 
 impl Memory {
-    pub fn new(file_path: String) -> Self {
+    pub fn new(file_path: &String) -> Self {
         let mut file = File::open(file_path).expect("Could not open binary file");
 
         let mut mem = Self {
@@ -83,7 +83,7 @@ impl Memory {
         if !self.in_code_seg(idx) || !self.in_code_seg(idx + 3) {
             return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
-        let bytes = i32_bytes(int);
+        let bytes = i32_bytes_be(int);
         self.bytes[idx] = bytes[0];
         self.bytes[idx + 1] = bytes[1];
         self.bytes[idx + 2] = bytes[2];

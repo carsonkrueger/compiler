@@ -15,16 +15,19 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let mut lexer = Lexer::new(&args.file_path);
-    let tokens: Vec<Token> = lexer.into_iter().collect();
+    let mut vm = vm::cpu::Cpu::new(&args.file_path);
+    vm.run();
+
+    // let mut lexer = Lexer::new(&args.file_path);
+    // let tokens: Vec<Token> = lexer.into_iter().collect();
 
     // for t in &tokens {
     //     println!("{}", t.lexeme);
     // }
 
-    let parser = crate::compiler::parser::Parser::new(&tokens);
+    // let parser = crate::compiler::parser::Parser::new(&tokens);
 
-    for expr in parser {
-        println!("{:?}", expr);
-    }
+    // for expr in parser {
+    //     println!("{:?}", expr);
+    // }
 }

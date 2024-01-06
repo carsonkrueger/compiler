@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use crate::util::reportable::Reportable;
+
+#[derive(Debug, Clone, Copy)]
 pub enum Opcode {
     jmp,
     jmr,
@@ -145,4 +147,12 @@ impl TryFrom<i32> for Opcode {
 #[derive(Debug)]
 pub enum OpcodeErr {
     InvalidOpcode(i32),
+}
+
+impl Reportable for OpcodeErr {
+    fn report(&self) -> String {
+        match &self {
+            OpcodeErr::InvalidOpcode(o) => format!("Invalid opcode: {}", o),
+        }
+    }
 }

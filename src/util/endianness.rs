@@ -26,6 +26,10 @@ pub fn as_i32_le(array: &[u8; 4]) -> i32 {
         + ((array[3] as i32) << 24)
 }
 
-pub fn i32_bytes(int: i32) -> [u8; 4] {
-    unsafe { std::mem::transmute(int) }
+pub fn i32_bytes_be(int: i32) -> [u8; 4] {
+    unsafe { std::mem::transmute(int.to_be()) }
+}
+
+pub fn i32_bytes_le(int: i32) -> [u8; 4] {
+    unsafe { std::mem::transmute(int.to_le()) }
 }
