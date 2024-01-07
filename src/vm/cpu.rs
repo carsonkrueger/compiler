@@ -155,6 +155,7 @@ impl Cpu {
 pub enum CpuErr {
     RgOutOfBounds(usize),
     InvalidInstruction(Instruction),
+    IOError,
 }
 
 impl Reportable for CpuErr {
@@ -170,6 +171,7 @@ pub enum VMErr {
     MemoryErr(MemoryErr),
     CpuErr(CpuErr),
     OpcodeErr(OpcodeErr),
+    IOError { trp_num: usize },
 }
 
 impl Reportable for VMErr {
@@ -178,6 +180,7 @@ impl Reportable for VMErr {
             VMErr::CpuErr(e) => e.report(),
             VMErr::MemoryErr(e) => e.report(),
             VMErr::OpcodeErr(e) => e.report(),
+            VMErr::IOError { trp_num } => format!("IO Error with TRP instruction {}", trp_num),
         }
     }
 }

@@ -67,31 +67,30 @@ impl Instruction {
     }
     pub fn mov(&self, cpu: &mut Cpu) -> ExecuteResult {
         let int = match cpu.rg_at_ref(self.op1 as usize) {
-            Ok(r) => r,
+            Ok(rs) => rs.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
-        }
-        .get_i32();
-        let r1 = match cpu.rg_at_mut(self.op1 as usize) {
+        };
+        let rd = match cpu.rg_at_mut(self.op2 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        r1.set_i32(int);
+        rd.set_i32(int);
         ExecuteResult::Continue
     }
     pub fn movi(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let r1 = match cpu.rg_at_mut(self.op1 as usize) {
+        let rd = match cpu.rg_at_mut(self.op1 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        r1.set_i32(self.op2);
+        rd.set_i32(self.op2);
         ExecuteResult::Continue
     }
     pub fn lda(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let r1 = match cpu.rg_at_mut(self.op1 as usize) {
+        let rd = match cpu.rg_at_mut(self.op1 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        r1.set_i32(self.op2);
+        rd.set_i32(self.op2);
         ExecuteResult::Continue
     }
     // fn stf(&self, cpu: &mut Cpu) -> ExecuteResult {
@@ -136,52 +135,66 @@ impl Instruction {
     //     ExecuteResult::Continue
     // }
     pub fn str(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let r1 = match cpu.rg_at_ref(self.op1 as usize) {
+        let rs = match cpu.rg_at_ref(self.op1 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        cpu.memory.set_i32(self.op2 as usize, r1.get_i32());
-        ExecuteResult::Continue
+        match cpu.memory.set_i32(self.op2 as usize, rs.get_i32()) {
+            Ok(_) => ExecuteResult::Continue,
+            Err(e) => ExecuteResult::Error(VMErr::MemoryErr(e)),
+        }
     }
     pub fn str2(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let r1 = match cpu.rg_at_ref(self.op1 as usize) {
+        let rs = match cpu.rg_at_ref(self.op1 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        let r2 = match cpu.rg_at_ref(self.op1 as usize) {
+        let rg = match cpu.rg_at_ref(self.op2 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        cpu.memory.set_i32(r2.get_i32() as usize, r1.get_i32());
-        ExecuteResult::Continue
+        match cpu.memory.set_i32(rg.get_i32() as usize, rs.get_i32()) {
+            Ok(_) => ExecuteResult::Continue,
+            Err(e) => ExecuteResult::Error(VMErr::MemoryErr(e)),
+        }
     }
     pub fn ldr(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let r1 = match cpu.rg_at_ref(self.op1 as usize) {
+        let int = match cpu.memory.get_data_seg_i32(self.op2 as usize) {
+            Ok(i) => i,
+            Err(e) => return ExecuteResult::Error(VMErr::MemoryErr(e)),
+        };
+        let rd = match cpu.rg_at_mut(self.op1 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        cpu.memory.get_data_seg_i32(self.op2 as usize);
+        rd.set_i32(int);
         ExecuteResult::Continue
     }
     pub fn ldr2(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let r1 = match cpu.rg_at_ref(self.op1 as usize) {
+        let addr = match cpu.rg_at_ref(self.op1 as usize) {
+            Ok(r) => r.get_i32(),
+            Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
+        };
+        let int = match cpu.memory.get_any_i32(addr as usize) {
+            Ok(i) => i,
+            Err(e) => return ExecuteResult::Error(VMErr::MemoryErr(e)),
+        };
+        let rd = match cpu.rg_at_mut(self.op1 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        let r2 = match cpu.rg_at_ref(self.op1 as usize) {
-            Ok(r) => r,
-            Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
-        };
-        cpu.memory.get_any_i32(r2.get_i32() as usize);
+        rd.set_i32(int);
         ExecuteResult::Continue
     }
     pub fn stb(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let r1 = match cpu.rg_at_ref(self.op1 as usize) {
+        let rs = match cpu.rg_at_ref(self.op1 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        cpu.memory.set_u8(self.op2 as usize, r1.get_u8());
-        ExecuteResult::Continue
+        match cpu.memory.set_u8(self.op2 as usize, rs.get_u8()) {
+            Ok(_) => ExecuteResult::Continue,
+            Err(e) => ExecuteResult::Error(VMErr::MemoryErr(e)),
+        }
     }
     pub fn stb2(&self, cpu: &mut Cpu) -> ExecuteResult {
         let rs = match cpu.rg_at_ref(self.op1 as usize) {
@@ -192,8 +205,10 @@ impl Instruction {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        cpu.memory.set_u8(rg.get_i32() as usize, rs.get_u8());
-        ExecuteResult::Continue
+        match cpu.memory.set_u8(rg.get_i32() as usize, rs.get_u8()) {
+            Ok(_) => ExecuteResult::Continue,
+            Err(e) => ExecuteResult::Error(VMErr::MemoryErr(e)),
+        }
     }
     pub fn ldb(&self, cpu: &mut Cpu) -> ExecuteResult {
         let byte = match cpu.memory.get_data_seg_u8(self.op2 as usize) {
@@ -239,22 +254,26 @@ impl Instruction {
         ExecuteResult::Continue
     }
     pub fn cmpi(&self, cpu: &mut Cpu) -> ExecuteResult {
+        let rs_int = match cpu.rg_at_ref(self.op2 as usize) {
+            Ok(r) => r.get_i32(),
+            Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
+        };
         let rd = match cpu.rg_at_mut(self.op1 as usize) {
             Ok(r) => r,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
         let rd_int = rd.get_i32();
-        if rd_int == self.op2 {
+        if rd_int == rs_int {
             rd.set_i32(0);
-        } else if rd_int > self.op2 {
+        } else if rd_int > rs_int {
             rd.set_i32(1);
-        } else if rd_int < self.op2 {
+        } else if rd_int < rs_int {
             rd.set_i32(-1);
         }
         ExecuteResult::Continue
     }
     pub fn add(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let int = match cpu.rg_at_ref(self.op1 as usize) {
+        let int = match cpu.rg_at_ref(self.op2 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
@@ -274,7 +293,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     pub fn sub(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let int = match cpu.rg_at_ref(self.op1 as usize) {
+        let int = match cpu.rg_at_ref(self.op2 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
@@ -286,7 +305,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     pub fn mul(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let int = match cpu.rg_at_ref(self.op1 as usize) {
+        let int = match cpu.rg_at_ref(self.op2 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
@@ -306,7 +325,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     pub fn div(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let int = match cpu.rg_at_ref(self.op1 as usize) {
+        let int = match cpu.rg_at_ref(self.op2 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
@@ -329,7 +348,12 @@ impl Instruction {
         match self.op1 {
             0 => self.trp0(cpu),
             1 => self.trp1(cpu),
+            2 => self.trp2(cpu),
             3 => self.trp3(cpu),
+            4 => self.trp4(cpu),
+            // 5 => self.trp5(cpu),
+            // 6 => self.trp6(cpu),
+            // 7 => self.trp7(cpu),
             _ => ExecuteResult::Error(VMErr::CpuErr(super::cpu::CpuErr::InvalidInstruction(
                 self.clone(),
             ))),
@@ -346,7 +370,23 @@ impl Instruction {
         print!("{}", r3.get_i32());
         ExecuteResult::Continue
     }
-    // fn trp2(&self, cpu: &mut Cpu) -> ExecuteResult {}
+    fn trp2(&self, cpu: &mut Cpu) -> ExecuteResult {
+        let mut line = String::new();
+        match std::io::stdin().read_line(&mut line) {
+            Ok(s) => s,
+            Err(_) => return ExecuteResult::Error(VMErr::IOError),
+        };
+        let r3 = match cpu.rg_at_mut(3) {
+            Ok(r) => r,
+            Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
+        };
+        let int = match line.parse::<i32>() {
+            Ok(i) => i,
+            Err(_) => return ExecuteResult::Error(VMErr::IOError),
+        };
+        r3.set_i32(int);
+        ExecuteResult::Continue
+    }
     fn trp3(&self, cpu: &mut Cpu) -> ExecuteResult {
         let r3 = match cpu.rg_at_ref(3) {
             Ok(r) => r,
@@ -355,12 +395,23 @@ impl Instruction {
         print!("{}", r3.get_u8() as char);
         ExecuteResult::Continue
     }
+    fn trp4(&self, cpu: &mut Cpu) -> ExecuteResult {
+        let mut line = String::new();
+        match std::io::stdin().read_line(&mut line) {
+            Ok(s) => s,
+            Err(_) => return ExecuteResult::Error(VMErr::IOError),
+        };
+        let r3 = match cpu.rg_at_mut(3) {
+            Ok(r) => r,
+            Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
+        };
+        let int = match line.parse::<u8>() {
+            Ok(i) => i,
+            Err(_) => return ExecuteResult::Error(VMErr::IOError),
+        };
+        r3.set_u8(int);
+        ExecuteResult::Continue
+    }
     // fn trp4(&self, cpu: &mut Cpu) -> ExecuteResult {}
     // fn trp5(&self, cpu: &mut Cpu) -> ExecuteResult {}
 }
-
-pub enum InstructionErr {
-    InvalidRegister,
-}
-
-impl InstructionErr {}
