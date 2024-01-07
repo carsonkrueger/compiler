@@ -3,12 +3,12 @@ use crate::util::{
     reportable::Reportable,
 };
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::Read;
 
-const mem_capacity: usize = 102400;
+const MEM_CAPACITY: usize = 102400;
 
 pub struct Memory {
-    bytes: [u8; mem_capacity],
+    bytes: [u8; MEM_CAPACITY],
     data_seg_start: usize,
     code_seg_start: usize,
     heap_start: usize,
@@ -33,7 +33,7 @@ impl Memory {
             stack_size: 0,
         };
 
-        file.read_exact(&mut mem.bytes);
+        let _ = file.read_exact(&mut mem.bytes);
         let first_bytes = [mem.bytes[0], mem.bytes[1], mem.bytes[2], mem.bytes[3]];
         let init_pc = as_i32_le(&first_bytes) as usize;
         mem.code_seg_start = init_pc;
@@ -41,7 +41,7 @@ impl Memory {
         mem
     }
     pub fn capacity() -> usize {
-        mem_capacity
+        MEM_CAPACITY
     }
     fn in_data_seg(&self, idx: usize) -> bool {
         idx >= self.data_seg_start && idx < self.code_seg_start
@@ -59,7 +59,7 @@ impl Memory {
         idx > self.next_stack_idx() && idx < self.bytes.len()
     }
     fn in_bounds(&self, idx: usize) -> bool {
-        idx >= 0 && idx < self.bytes.len()
+        idx < self.bytes.len()
     }
     fn next_heap_idx(&self) -> usize {
         self.heap_start + self.heap_size

@@ -47,89 +47,97 @@ impl Lexer {
     }
     fn lexeme_type(&self, lexeme: &String) -> Option<TokenType> {
         if self.patterns.label.is_match(&lexeme) {
-            Some(TokenType::label)
+            Some(TokenType::Label)
+        } else if self.patterns.label_op.is_match(&lexeme) {
+            Some(TokenType::LabelOp)
         } else if self.patterns.i_int.is_match(&lexeme) {
-            Some(TokenType::i_int)
+            Some(TokenType::IntImm)
         } else if self.patterns.i_str.is_match(&lexeme) {
-            Some(TokenType::i_str)
+            Some(TokenType::StrImm)
         } else if self.patterns.i_char.is_match(&lexeme) {
-            Some(TokenType::i_char)
+            Some(TokenType::CharImm)
         } else if self.patterns.comma.is_match(&lexeme) {
-            Some(TokenType::comma)
+            Some(TokenType::Comma)
         } else if self.patterns.int_dir.is_match(&lexeme) {
-            Some(TokenType::int_dir)
+            Some(TokenType::IntDir)
         } else if self.patterns.byt_dir.is_match(&lexeme) {
-            Some(TokenType::byt_dir)
+            Some(TokenType::BytDir)
         } else if self.patterns.str_dir.is_match(&lexeme) {
-            Some(TokenType::str_dir)
+            Some(TokenType::StrDir)
         } else if self.patterns.rg.is_match(&lexeme) {
-            Some(TokenType::rg)
+            Some(TokenType::Rg)
         } else if self.patterns.pc.is_match(&lexeme) {
-            Some(TokenType::pc)
+            Some(TokenType::Pc)
+        } else if self.patterns.sp.is_match(&lexeme) {
+            Some(TokenType::Sp)
+        } else if self.patterns.hp.is_match(&lexeme) {
+            Some(TokenType::Hp)
         } else if self.patterns.jmp.is_match(&lexeme) {
-            Some(TokenType::jmp)
+            Some(TokenType::Jmp)
         } else if self.patterns.jmr.is_match(&lexeme) {
-            Some(TokenType::jmr)
+            Some(TokenType::Jmr)
         } else if self.patterns.bnz.is_match(&lexeme) {
-            Some(TokenType::bnz)
+            Some(TokenType::Bnz)
         } else if self.patterns.bgt.is_match(&lexeme) {
-            Some(TokenType::bgt)
+            Some(TokenType::Bgt)
         } else if self.patterns.blt.is_match(&lexeme) {
-            Some(TokenType::blt)
+            Some(TokenType::Blt)
         } else if self.patterns.brz.is_match(&lexeme) {
-            Some(TokenType::brz)
+            Some(TokenType::Brz)
         } else if self.patterns.bal.is_match(&lexeme) {
-            Some(TokenType::bal)
+            Some(TokenType::Bal)
         } else if self.patterns.mov.is_match(&lexeme) {
-            Some(TokenType::mov)
+            Some(TokenType::Mov)
         } else if self.patterns.movi.is_match(&lexeme) {
-            Some(TokenType::movi)
+            Some(TokenType::Movi)
         } else if self.patterns.lda.is_match(&lexeme) {
-            Some(TokenType::lda)
+            Some(TokenType::Lda)
         } else if self.patterns.str.is_match(&lexeme) {
-            Some(TokenType::str)
+            Some(TokenType::Str)
         } else if self.patterns.ldr.is_match(&lexeme) {
-            Some(TokenType::ldr)
+            Some(TokenType::Ldr)
         } else if self.patterns.stb.is_match(&lexeme) {
-            Some(TokenType::stb)
+            Some(TokenType::Stb)
         } else if self.patterns.ldb.is_match(&lexeme) {
-            Some(TokenType::ldb)
+            Some(TokenType::Ldb)
         } else if self.patterns.push.is_match(&lexeme) {
-            Some(TokenType::push)
+            Some(TokenType::Push)
         } else if self.patterns.pop.is_match(&lexeme) {
-            Some(TokenType::pop)
+            Some(TokenType::Pop)
         } else if self.patterns.peek.is_match(&lexeme) {
-            Some(TokenType::peek)
+            Some(TokenType::Peek)
         } else if self.patterns.and.is_match(&lexeme) {
-            Some(TokenType::and)
+            Some(TokenType::And)
         } else if self.patterns.or.is_match(&lexeme) {
-            Some(TokenType::or)
+            Some(TokenType::Or)
         } else if self.patterns.not.is_match(&lexeme) {
-            Some(TokenType::not)
+            Some(TokenType::Not)
         } else if self.patterns.cmp.is_match(&lexeme) {
-            Some(TokenType::cmp)
+            Some(TokenType::Cmp)
         } else if self.patterns.cmpi.is_match(&lexeme) {
-            Some(TokenType::cmpi)
+            Some(TokenType::Cmpi)
         } else if self.patterns.add.is_match(&lexeme) {
-            Some(TokenType::add)
+            Some(TokenType::Add)
         } else if self.patterns.adi.is_match(&lexeme) {
-            Some(TokenType::adi)
+            Some(TokenType::Adi)
         } else if self.patterns.sub.is_match(&lexeme) {
-            Some(TokenType::sub)
+            Some(TokenType::Sub)
         } else if self.patterns.mul.is_match(&lexeme) {
-            Some(TokenType::mul)
+            Some(TokenType::Mul)
         } else if self.patterns.muli.is_match(&lexeme) {
-            Some(TokenType::muli)
+            Some(TokenType::Muli)
         } else if self.patterns.div.is_match(&lexeme) {
-            Some(TokenType::div)
+            Some(TokenType::Div)
         } else if self.patterns.divi.is_match(&lexeme) {
-            Some(TokenType::divi)
+            Some(TokenType::Divi)
         } else if self.patterns.alci.is_match(&lexeme) {
-            Some(TokenType::alci)
+            Some(TokenType::Alci)
         } else if self.patterns.allc.is_match(&lexeme) {
-            Some(TokenType::allc)
+            Some(TokenType::Allc)
         } else if self.patterns.trp.is_match(&lexeme) {
-            Some(TokenType::trp)
+            Some(TokenType::Trp)
+        } else if self.patterns.comment.is_match(&lexeme) {
+            Some(TokenType::Comment)
         } else {
             None
         }
@@ -160,7 +168,10 @@ impl Iterator for Lexer {
         Some(Token {
             lexeme: lexeme.to_owned(),
             token_type: match self.lexeme_type(&lexeme) {
-                Some(t) => t,
+                Some(t) => match t {
+                    TokenType::Comment => return self.next(), // skip comments
+                    t => t,
+                },
                 None => panic!("Invalid token: {} on line: {}", lexeme, self.line_index),
             },
             line: self.line_index,

@@ -8,11 +8,11 @@ use super::{
 };
 use crate::{util::reportable::Reportable, vm::memory::Memory};
 
-const num_rgs: usize = 64;
+const NUM_RGS: usize = 64;
 
 pub struct Cpu {
     pub memory: Memory,
-    pub registers: [Register; num_rgs],
+    pub registers: [Register; NUM_RGS],
     pub pc: usize,
     pub hp: usize,
     pub sp: usize,
@@ -22,7 +22,7 @@ impl Cpu {
     pub fn new(file_path: &String) -> Self {
         let cpu = Self {
             memory: Memory::new(file_path),
-            registers: [Register::default(); num_rgs],
+            registers: [Register::default(); NUM_RGS],
             pc: 4,
             hp: 0,
             sp: 0,
@@ -85,7 +85,7 @@ impl Cpu {
         self.memory.in_code_seg(self.pc) && self.memory.in_code_seg(self.pc + 11)
     }
     pub fn valid_rg(&self, idx: usize) -> bool {
-        idx < num_rgs
+        idx < NUM_RGS
     }
     // pub fn rg_at(&self, idx: usize) -> Result<Register, CpuErr> {
     //     if idx < 0 || idx > self.registers.len() {
