@@ -29,6 +29,13 @@ impl<'a> Assembler<'a> {
             None
         }
     }
+    fn previous(&self) -> Option<&Token> {
+        if self.cur_idx > 0 || self.cur_idx <= self.tokens.len() {
+            Some(&self.tokens[self.cur_idx])
+        } else {
+            None
+        }
+    }
     fn consume_match(&mut self, token_type: TokenType) -> bool {
         let bool = match self.peek() {
             Some(t) => t.token_type == token_type,
@@ -55,11 +62,16 @@ impl<'a> Assembler<'a> {
         }
         false
     }
-    fn next_directive(&mut self) -> Directive {
+    fn next_directive(&mut self) -> Option<Directive> {
         self.consume_match(TokenType::Label);
 
         let token_types = [TokenType::BytDir, TokenType::IntDir, TokenType::StrDir];
-        if self.consume_first_match(&token_types) {}
+        if self.consume_first_match(&token_types) {
+            let match self.previous() {
+                Some(t) => t,
+                None => return None,
+            }
+        }
     }
 }
 
