@@ -66,13 +66,28 @@ impl<'a> Assembler<'a> {
         self.consume_match(TokenType::Label);
 
         let token_types = [TokenType::BytDir, TokenType::IntDir, TokenType::StrDir];
-        if self.consume_first_match(&token_types) {
-            let match self.previous() {
+        let dir_type = if self.consume_first_match(&token_types) {
+            match self.previous() {
+                Some(t) => t.clone(),
+                None => return None,
+            }
+        } else {
+            return None;
+        };
+
+        let token_types = [TokenType::CharImm, TokenType::IntImm, TokenType::StrImm];
+        let dir_value = if self.consume_first_match(&token_types) {
+            match self.previous() {
                 Some(t) => t,
                 None => return None,
             }
+        } else {
+            return None;
+        };
+
+        match Directive::try_from(&dir_type, Some(dir_value)) {
+            Ok(d) => Some(d),
+            Err(_) => None
         }
     }
 }
-
-pub enum ParseErr {}
