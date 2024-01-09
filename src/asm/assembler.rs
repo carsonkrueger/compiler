@@ -44,7 +44,7 @@ impl<'a> Assembler<'a> {
             if let Some(directive) = self.consume_next_directive() {
                 match directive.write(&mut writer) {
                     Err(e) => panic!(
-                        "Error writing directive {:?} to {}",
+                        "Error writing directive {:?}\nTo file: {}",
                         directive, self.file_name
                     ),
                     Ok(_) => (),
@@ -54,11 +54,11 @@ impl<'a> Assembler<'a> {
             break;
         }
         loop {
-            if let Some(directive) = self.consume_next_directive() {
-                match directive.write(&mut writer) {
+            if let Ok(instruction) = self.consume_next_instruction() {
+                match instruction.write(&mut writer) {
                     Err(e) => panic!(
                         "Error writing instruction {:?} to {}",
-                        directive, self.file_name
+                        instruction, self.file_name
                     ),
                     Ok(_) => (),
                 }
@@ -230,7 +230,40 @@ impl<'a> Assembler<'a> {
                     op2: 0,
                 })
             }
-            // TokenType::Bnz,
+            TokenType::Bnz | TokenType::Bgt | TokenType::Bgt | TokenType::Bgt | TokenType::Bgt => {
+                let op_1 = if self.consume_match(TokenType::Rg) {
+                    match self.previous() {
+                        Some(t) => t,
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
+                };
+                let rs = match Self::from_rg_str(&op_1.lexeme) {
+                    Ok(i) => i,
+                    Err(_) => return Err(AssemblerErr::InvalidRg(op_1.lexeme.clone())),
+                };
+                if !self.consume_match(TokenType::Comma) {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Comma));
+                }
+                let op_2 = if self.consume_match(TokenType::LabelOp) {
+                    match self.previous() {
+                        Some(t) => t,
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::LabelOp));
+                };
+                let offset = match self.symbol_table.get(&op_2.lexeme) {
+                    Some(o) => o.offset,
+                    None => return Err(AssemblerErr::NonexistentLabel(op_2.lexeme.clone())),
+                };
+                Ok(Instruction {
+                    // opcode: Opcode::Jmr,
+                    op1: rs,
+                    op2: offset as i32,
+                })
+            }
             // TokenType::Bgt,
             // TokenType::Blt,
             // TokenType::Brz,

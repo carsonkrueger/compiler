@@ -1,4 +1,6 @@
-use crate::util::reportable::Reportable;
+use std::io::{Seek, Write};
+
+use crate::util::{endianness::i32_bytes_le, reportable::Reportable};
 
 use super::{
     cpu::{Cpu, CpuErr, ExecuteResult, VMErr},
@@ -456,4 +458,31 @@ impl Instruction {
     }
     // fn trp4(&self, cpu: &mut Cpu) -> ExecuteResult {}
     // fn trp5(&self, cpu: &mut Cpu) -> ExecuteResult {}
+    pub fn write<W: Write + Seek>(&self, writer: &mut W) -> std::io::Result<()> {
+        writer.seek(std::io::SeekFrom::End(0))?;
+        writer.write_all(&self.as_box_slice().as_slice())
+    }
+    fn as_box_slice(&self) -> Box<[u8; 12]> {
+        let mut bytes = Box::new([0_u8; 12]);
+
+        let mut int = i32_bytes_le(self.opcode.into());
+        bytes[0] = int[0];
+        bytes[1] = int[1];
+        bytes[2] = int[2];
+        bytes[3] = int[3];
+
+        int = i32_bytes_le(self.op1);
+        bytes[4] = int[0];
+        bytes[5] = int[1];
+        bytes[6] = int[2];
+        bytes[7] = int[3];
+
+        int = i32_bytes_le(self.op2);
+        bytes[8] = int[0];
+        bytes[9] = int[1];
+        bytes[10] = int[2];
+        bytes[11] = int[3];
+
+        bytes
+    }
 }
