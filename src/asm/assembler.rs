@@ -1,3 +1,7 @@
+use std::fs::File;
+
+use crate::vm::{instruction::Instruction, opcode::Opcode};
+
 use super::{
     directive::Directive,
     symbol::Symbol,
@@ -9,35 +13,58 @@ pub struct Assembler<'a> {
     tokens: &'a Vec<Token>,
     cur_idx: usize,
     symbol_table: SymbolTable,
+    file_name: String,
 }
 
 impl<'a> Assembler<'a> {
-    fn new(tokens: &'a Vec<Token>) -> Self {
+    fn new(tokens: &'a Vec<Token>, file_name: String) -> Self {
         Self {
             tokens,
             cur_idx: 0,
             symbol_table: SymbolTable::new(),
+            file_name,
         }
     }
     fn pass_one(&mut self) {
         while !self.reached_eof() {
             if self.consume_match(TokenType::Label) {
-                let t = match self.previous() {
+                let label_token = match self.previous() {
                     Some(t) => t,
                     None => continue,
                 };
-                let symbol = Symbol::new(t.clone(), self.num_bytes_dir());
+                let symbol = Symbol::new(label_token.clone(), self.consume_num_bytes_dir());
                 self.symbol_table.insert(&symbol);
             }
         }
     }
     fn pass_two(&mut self) {
+        let mut writer = File::create(self.file_name.clone() + &String::from(".bin"))
+            .expect("Could not create binary file");
         loop {
-            if let Some(directive) = self.next_directive() {
-                directive.write(writer)
-            } else {
-                break;
+            if let Some(directive) = self.consume_next_directive() {
+                match directive.write(&mut writer) {
+                    Err(e) => panic!(
+                        "Error writing directive {:?} to {}",
+                        directive, self.file_name
+                    ),
+                    Ok(_) => (),
+                }
+                continue;
             }
+            break;
+        }
+        loop {
+            if let Some(directive) = self.consume_next_directive() {
+                match directive.write(&mut writer) {
+                    Err(e) => panic!(
+                        "Error writing instruction {:?} to {}",
+                        directive, self.file_name
+                    ),
+                    Ok(_) => (),
+                }
+                continue;
+            }
+            break;
         }
     }
     fn advance(&mut self) {
@@ -89,7 +116,7 @@ impl<'a> Assembler<'a> {
         }
         false
     }
-    fn next_directive(&mut self) -> Option<Directive> {
+    fn consume_next_directive(&mut self) -> Option<Directive> {
         let found_label = self.consume_match(TokenType::Label);
 
         let token_types = [TokenType::BytDir, TokenType::IntDir, TokenType::StrDir];
@@ -120,7 +147,123 @@ impl<'a> Assembler<'a> {
             ),
         }
     }
-    fn num_bytes_dir(&mut self) -> usize {
+    fn consume_next_instruction(&mut self) -> Result<Instruction, AssemblerErr> {
+        self.consume_match(TokenType::Label);
+        let token_types = [
+            TokenType::Jmp,
+            TokenType::Jmr,
+            TokenType::Bnz,
+            TokenType::Bgt,
+            TokenType::Blt,
+            TokenType::Brz,
+            TokenType::Bal,
+            TokenType::Mov,
+            TokenType::Movi,
+            TokenType::Lda,
+            TokenType::Str,
+            TokenType::Ldr,
+            TokenType::Stb,
+            TokenType::Ldb,
+            TokenType::Push,
+            TokenType::Pop,
+            TokenType::Peek,
+            TokenType::And,
+            TokenType::Or,
+            TokenType::Not,
+            TokenType::Cmp,
+            TokenType::Cmpi,
+            TokenType::Add,
+            TokenType::Adi,
+            TokenType::Sub,
+            TokenType::Mul,
+            TokenType::Muli,
+            TokenType::Div,
+            TokenType::Divi,
+            TokenType::Alci,
+            TokenType::Allc,
+            TokenType::Trp,
+        ];
+        let opcode = if self.consume_first_match(&token_types) {
+            match self.previous() {
+                Some(t) => t,
+                None => panic!("Expected token not found"),
+            }
+        } else {
+            return Err(AssemblerErr::ExpectedOpcode);
+        };
+        match opcode.token_type {
+            TokenType::Jmp => {
+                let op_1 = if self.consume_match(TokenType::LabelOp) {
+                    match self.previous() {
+                        Some(t) => t,
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::LabelOp));
+                };
+                let offset = match self.symbol_table.get(&op_1.lexeme) {
+                    Some(s) => s.offset,
+                    None => return Err(AssemblerErr::NonexistentLabel(op_1.lexeme.clone())),
+                };
+                Ok(Instruction {
+                    opcode: Opcode::Jmp,
+                    op1: offset as i32,
+                    op2: 0,
+                })
+            }
+            TokenType::Jmr => {
+                let op_1 = if self.consume_match(TokenType::Rg) {
+                    match self.previous() {
+                        Some(t) => t,
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
+                };
+                let rg = match Self::from_rg_str(&op_1.lexeme) {
+                    Ok(i) => i,
+                    Err(_) => return Err(AssemblerErr::InvalidRg(op_1.lexeme.clone())),
+                };
+                Ok(Instruction {
+                    opcode: Opcode::Jmr,
+                    op1: rg,
+                    op2: 0,
+                })
+            }
+            // TokenType::Bnz,
+            // TokenType::Bgt,
+            // TokenType::Blt,
+            // TokenType::Brz,
+            // TokenType::Bal,
+            // TokenType::Mov,
+            // TokenType::Movi,
+            // TokenType::Lda,
+            // TokenType::Str,
+            // TokenType::Ldr,
+            // TokenType::Stb,
+            // TokenType::Ldb,
+            // TokenType::Push,
+            // TokenType::Pop,
+            // TokenType::Peek,
+            // TokenType::And,
+            // TokenType::Or,
+            // TokenType::Not,
+            // TokenType::Cmp,
+            // TokenType::Cmpi,
+            // TokenType::Add,
+            // TokenType::Adi,
+            // TokenType::Sub,
+            // TokenType::Mul,
+            // TokenType::Muli,
+            // TokenType::Div,
+            // TokenType::Divi,
+            // TokenType::Alci,
+            // TokenType::Allc,
+            // TokenType::Trp,
+            _ => return Err(AssemblerErr::InvalidToken),
+        }
+    }
+    fn consume_num_bytes_dir(&mut self) -> usize {
         let token_types = [TokenType::BytDir, TokenType::IntDir, TokenType::StrDir];
         if !self.consume_first_match(&token_types) {
             return 0;
@@ -157,4 +300,18 @@ impl<'a> Assembler<'a> {
             _ => 0,
         }
     }
+    fn from_rg_str(rg_str: &String) -> Result<i32, ()> {
+        match rg_str.replace("R", "").parse::<i32>() {
+            Ok(i) => Ok(i),
+            Err(_) => Err(()),
+        }
+    }
+}
+
+pub enum AssemblerErr {
+    ExpectedTokenType(TokenType),
+    InvalidToken,
+    ExpectedOpcode,
+    InvalidRg(String),
+    NonexistentLabel(String),
 }
