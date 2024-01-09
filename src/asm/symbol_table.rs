@@ -2,11 +2,11 @@ use std::collections::HashMap;
 
 use super::{symbol::Symbol, token::Token};
 
-pub struct SymbolTable<'a> {
-    table: HashMap<String, Symbol<'a>>,
+pub struct SymbolTable {
+    table: HashMap<String, Symbol>,
 }
 
-impl<'a> SymbolTable<'a> {
+impl SymbolTable {
     pub fn new() -> Self {
         Self {
             table: HashMap::new(),
@@ -15,13 +15,13 @@ impl<'a> SymbolTable<'a> {
     fn contains(&self, string: &String) -> bool {
         self.table.contains_key(string)
     }
-    pub fn insert(&mut self, symbol: &'a Symbol) -> Result<(), SymbolTableErr> {
+    pub fn insert(&mut self, symbol: &Symbol) -> Result<(), SymbolTableErr> {
         match self
             .table
             .insert(symbol.token.lexeme.clone(), symbol.clone())
         {
             None => Ok(()),
-            Some(_) => Err(SymbolTableErr::AlreadyExists(&symbol)),
+            Some(_) => Err(SymbolTableErr::AlreadyExists(symbol.clone())),
         }
     }
     pub fn get(&self, string: &String) -> Option<&Symbol> {
@@ -29,6 +29,6 @@ impl<'a> SymbolTable<'a> {
     }
 }
 
-pub enum SymbolTableErr<'a> {
-    AlreadyExists(&'a Symbol<'a>),
+pub enum SymbolTableErr {
+    AlreadyExists(Symbol),
 }
