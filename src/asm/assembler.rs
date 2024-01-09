@@ -183,15 +183,15 @@ impl<'a> Assembler<'a> {
             TokenType::Allc,
             TokenType::Trp,
         ];
-        let opcode = if self.consume_first_match(&token_types) {
+        let opcode_type = if self.consume_first_match(&token_types) {
             match self.previous() {
-                Some(t) => t,
+                Some(t) => t.token_type.clone(),
                 None => panic!("Expected token not found"),
             }
         } else {
             return Err(AssemblerErr::ExpectedOpcode);
         };
-        match opcode.token_type {
+        match opcode_type {
             TokenType::Jmp => {
                 let op_1 = if self.consume_match(TokenType::LabelOp) {
                     match self.previous() {
@@ -220,7 +220,7 @@ impl<'a> Assembler<'a> {
                 } else {
                     return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
                 };
-                let rg = match Self::from_rg_str(&op_1.lexeme) {
+                let rg = match Self::i32_try_from_rg_str(&op_1.lexeme) {
                     Ok(i) => i,
                     Err(_) => return Err(AssemblerErr::InvalidRg(op_1.lexeme.clone())),
                 };
@@ -230,16 +230,21 @@ impl<'a> Assembler<'a> {
                     op2: 0,
                 })
             }
-            TokenType::Bnz | TokenType::Bgt | TokenType::Bgt | TokenType::Bgt | TokenType::Bgt => {
+            TokenType::Bnz
+            | TokenType::Bgt
+            | TokenType::Bgt
+            | TokenType::Bgt
+            | TokenType::Bgt
+            | TokenType::Bal => {
                 let op_1 = if self.consume_match(TokenType::Rg) {
                     match self.previous() {
-                        Some(t) => t,
+                        Some(t) => t.clone(),
                         None => panic!("Expected token not found"),
                     }
                 } else {
                     return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
                 };
-                let rs = match Self::from_rg_str(&op_1.lexeme) {
+                let rs = match Self::i32_try_from_rg_str(&op_1.lexeme) {
                     Ok(i) => i,
                     Err(_) => return Err(AssemblerErr::InvalidRg(op_1.lexeme.clone())),
                 };
@@ -258,8 +263,12 @@ impl<'a> Assembler<'a> {
                     Some(o) => o.offset,
                     None => return Err(AssemblerErr::NonexistentLabel(op_2.lexeme.clone())),
                 };
+                let opcode = match Opcode::try_from(opcode_type) {
+                    Ok(o) => o,
+                    Err(_) => return Err(AssemblerErr::ExpectedOpcode),
+                };
                 Ok(Instruction {
-                    // opcode: Opcode::Jmr,
+                    opcode,
                     op1: rs,
                     op2: offset as i32,
                 })
@@ -268,7 +277,51 @@ impl<'a> Assembler<'a> {
             // TokenType::Blt,
             // TokenType::Brz,
             // TokenType::Bal,
-            // TokenType::Mov,
+            TokenType::Mov => {
+                let rd = if self.consume_match(TokenType::Rg) {
+                    match self.previous() {
+                        Some(t) => match Self::i32_try_from_rg_str(&t.lexeme) {
+                            Ok(i) => i,
+                            Err(_) => return Err(AssemblerErr::InvalidRg(t.lexeme.clone())),
+                        },
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
+                };
+                if !self.consume_match(TokenType::Comma) {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Comma));
+                }
+                let rs = if self.consume_match(TokenType::Rg) {
+                    match self.previous() {
+                        Some(t) => match Self::i32_try_from_rg_str(&t.lexeme) {
+                            Ok(i) => i,
+                            Err(_) => return Err(AssemblerErr::InvalidRg(t.lexeme.clone())),
+                        },
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
+                };
+                // let rs = if self.consume_match(TokenType::Rg) {
+                //     match self.previous() {
+                //         Some(t) => {
+                //             match Self::from_rg_str(&t.lexeme) {
+                //                 Ok(i) => i,
+                //                 Err(_) => return Err(AssemblerErr::InvalidRg(op_1.lexeme.clone())),
+                //             },
+                //         }
+                //         None => panic!("Expected token not found"),
+                //     }
+                // } else {
+                //     return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
+                // };
+                Ok(Instruction {
+                    opcode: Opcode::Mov,
+                    op1: 0,
+                    op2: 0,
+                })
+            }
             // TokenType::Movi,
             // TokenType::Lda,
             // TokenType::Str,
@@ -333,8 +386,25 @@ impl<'a> Assembler<'a> {
             _ => 0,
         }
     }
-    fn from_rg_str(rg_str: &String) -> Result<i32, ()> {
+    fn i32_try_from_rg_str(rg_str: &String) -> Result<i32, ()> {
         match rg_str.replace("R", "").parse::<i32>() {
+            Ok(i) => Ok(i),
+            Err(_) => Err(()),
+        }
+    }
+    fn i32_try_from_char_imm_str(imm_str: &String) -> Result<i32, ()> {
+        let mut imm_str = imm_str.clone();
+        imm_str.remove(0);
+        imm_str.remove(imm_str.len() - 1);
+        match imm_str.parse::<char>() {
+            Ok(ch) => Ok(ch as i32),
+            Err(_) => Err(()),
+        }
+    }
+    fn i32_try_from_int_imm_str(imm_str: &String) -> Result<i32, ()> {
+        let mut imm_str = imm_str.clone();
+        imm_str.remove(0);
+        match imm_str.parse::<i32>() {
             Ok(i) => Ok(i),
             Err(_) => Err(()),
         }

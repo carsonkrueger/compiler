@@ -1,4 +1,4 @@
-use crate::util::reportable::Reportable;
+use crate::{asm::token::TokenType, util::reportable::Reportable};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Opcode {
@@ -140,6 +140,47 @@ impl TryFrom<i32> for Opcode {
             37 => Self::Allc2,
             21 => Self::Trp,
             op => return Err(OpcodeErr::InvalidOpcode(op)),
+        })
+    }
+}
+
+impl TryFrom<TokenType> for Opcode {
+    type Error = ();
+    fn try_from(value: TokenType) -> Result<Self, Self::Error> {
+        Ok(match value {
+            TokenType::Jmp => Opcode::Jmp,
+            TokenType::Jmr => Opcode::Jmr,
+            TokenType::Bnz => Opcode::Bnz,
+            TokenType::Bgt => Opcode::Bgt,
+            TokenType::Blt => Opcode::Blt,
+            TokenType::Brz => Opcode::Brz,
+            TokenType::Bal => Opcode::Bal,
+            TokenType::Mov => Opcode::Mov,
+            TokenType::Movi => Opcode::Movi,
+            TokenType::Lda => Opcode::Lda,
+            TokenType::Str => Opcode::Str,
+            TokenType::Ldr => Opcode::Ldr,
+            TokenType::Stb => Opcode::Stb,
+            TokenType::Ldb => Opcode::Ldb,
+            TokenType::Push => Opcode::Push,
+            TokenType::Pop => Opcode::Pop,
+            TokenType::Peek => Opcode::Peek,
+            TokenType::And => Opcode::And,
+            TokenType::Or => Opcode::Or,
+            TokenType::Not => Opcode::Not,
+            TokenType::Cmp => Opcode::Cmp,
+            TokenType::Cmpi => Opcode::Cmpi,
+            TokenType::Add => Opcode::Add,
+            TokenType::Adi => Opcode::Adi,
+            TokenType::Sub => Opcode::Sub,
+            TokenType::Mul => Opcode::Mul,
+            TokenType::Muli => Opcode::Muli,
+            TokenType::Div => Opcode::Div,
+            TokenType::Divi => Opcode::Divi,
+            TokenType::Alci => Opcode::Alci,
+            TokenType::Allc => Opcode::Allc,
+            TokenType::Trp => Opcode::Trp,
+            _ => return Err(()),
         })
     }
 }
