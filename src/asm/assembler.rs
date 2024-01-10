@@ -1,3 +1,4 @@
+use core::panic;
 use std::{f32::consts::PI, fs::File};
 
 use crate::vm::{instruction::Instruction, opcode::Opcode};
@@ -17,13 +18,17 @@ pub struct Assembler<'a> {
 }
 
 impl<'a> Assembler<'a> {
-    fn new(tokens: &'a Vec<Token>, file_name: String) -> Self {
+    pub fn new(tokens: &'a Vec<Token>, file_name: String) -> Self {
         Self {
             tokens,
             cur_idx: 0,
             symbol_table: SymbolTable::new(),
             file_name,
         }
+    }
+    pub fn run(&mut self) {
+        self.pass_one();
+        self.pass_two();
     }
     fn pass_one(&mut self) {
         while !self.reached_eof() {
@@ -211,7 +216,7 @@ impl<'a> Assembler<'a> {
                     op2: 0,
                 })
             }
-            TokenType::Jmr => {
+            TokenType::Jmr | TokenType::Push | TokenType::Peek | TokenType::Pop => {
                 let op_1 = if self.consume_match(TokenType::Rg) {
                     match self.previous() {
                         Some(t) => t,
@@ -232,9 +237,8 @@ impl<'a> Assembler<'a> {
             }
             TokenType::Bnz
             | TokenType::Bgt
-            | TokenType::Bgt
-            | TokenType::Bgt
-            | TokenType::Bgt
+            | TokenType::Blt
+            | TokenType::Brz
             | TokenType::Bal
             | TokenType::Lda => {
                 let op_1 = if self.consume_match(TokenType::Rg) {
@@ -283,7 +287,11 @@ impl<'a> Assembler<'a> {
             | TokenType::Or
             | TokenType::Not
             | TokenType::Cmp
-            | TokenType::Allc => {
+            | TokenType::Allc
+            | TokenType::Add
+            | TokenType::Sub
+            | TokenType::Mul
+            | TokenType::Div => {
                 let opcode = match Opcode::try_from(opcode_token.token_type) {
                     Ok(o) => o,
                     Err(_) => return Err(AssemblerErr::ExpectedOpcode),
@@ -319,7 +327,12 @@ impl<'a> Assembler<'a> {
                     op2: rs,
                 })
             }
-            TokenType::Movi => {
+            TokenType::Movi
+            | TokenType::Cmpi
+            | TokenType::Adi
+            | TokenType::Muli
+            | TokenType::Divi
+            | TokenType::Alci => {
                 let rd = if self.consume_match(TokenType::Rg) {
                     match self.previous() {
                         Some(t) => match Self::i32_try_from_rg_str(&t.lexeme) {
@@ -423,19 +436,31 @@ impl<'a> Assembler<'a> {
                     op2: op_2,
                 })
             }
-            // TokenType::Push,
-            // TokenType::Pop,
-            // TokenType::Peek,
-            // TokenType::Cmpi,
-            // TokenType::Add,
-            // TokenType::Adi,
-            // TokenType::Sub,
-            // TokenType::Mul,
-            // TokenType::Muli,
-            // TokenType::Div,
-            // TokenType::Divi,
-            // TokenType::Alci,
-            // TokenType::Trp,
+            TokenType::Trp => {
+                let op1 = if self.consume_match(TokenType::IntImm) {
+                    match self.previous() {
+                        Some(t) => match Self::i32_try_from_int_imm_str(&t.lexeme) {
+                            Ok(i) => {
+                                if i < 0 || i > 4 {
+                                    return Err(AssemblerErr::InvalidToken(t.clone()));
+                                }
+                                i
+                            }
+                            Err(_) => {
+                                return Err(AssemblerErr::ExpectedTokenType(TokenType::IntImm))
+                            }
+                        },
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::IntImm));
+                };
+                Ok(Instruction {
+                    opcode: Opcode::Trp,
+                    op1,
+                    op2: 0,
+                })
+            }
             _ => return Err(AssemblerErr::InvalidToken(opcode_token)),
         }
     }

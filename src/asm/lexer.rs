@@ -152,26 +152,38 @@ impl Lexer {
 impl Iterator for Lexer {
     type Item = Token;
     fn next(&mut self) -> Option<Self::Item> {
-        while self.unprocessed_lexeme.is_empty() {
-            let line = match self.next_line() {
-                Some(l) => l,
-                None => return None,
-            };
-            self.split_line_into_lexeme(&line);
-        }
+        // while self.unprocessed_lexeme.is_empty() {
+        //     let line = match self.next_line() {
+        //         Some(l) => l,
+        //         None => return None,
+        //     };
+        //     self.split_line_into_lexeme(&line);
+        // }
 
-        let lexeme = match self.next_lexeme() {
-            Some(l) => l,
-            None => return None,
+        let lexeme = loop {
+            match self.next_lexeme() {
+                Some(l) => match self.lexeme_type(&l) {
+                    Some(TokenType::Comment) => {
+                        println!("Skipping {}", l);
+                        continue;
+                    }
+                    Some(t) => break l,
+                    None => panic!("Invalid token: {} on line: {}", l, self.line_index),
+                },
+                None => {
+                    let line = match self.next_line() {
+                        Some(l) => l,
+                        None => return None,
+                    };
+                    self.split_line_into_lexeme(&line);
+                }
+            }
         };
 
         Some(Token {
             lexeme: lexeme.to_owned(),
             token_type: match self.lexeme_type(&lexeme) {
-                Some(t) => match t {
-                    TokenType::Comment => return self.next(), // skip comments
-                    t => t,
-                },
+                Some(t) => t,
                 None => panic!("Invalid token: {} on line: {}", lexeme, self.line_index),
             },
             line: self.line_index,
