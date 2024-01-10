@@ -27,6 +27,12 @@ impl SymbolTable {
     pub fn get(&self, string: &String) -> Option<&Symbol> {
         self.table.get(string)
     }
+    pub fn get_expect(&self, string: &String) -> &Symbol {
+        match self.table.get(string) {
+            Some(s) => s,
+            None => panic!("Symbol does not exist in symbol table: {}", string),
+        }
+    }
 }
 
 pub enum SymbolTableErr {

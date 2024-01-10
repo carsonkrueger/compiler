@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::{f32::consts::PI, fs::File};
 
 use crate::vm::{instruction::Instruction, opcode::Opcode};
 
@@ -183,15 +183,15 @@ impl<'a> Assembler<'a> {
             TokenType::Allc,
             TokenType::Trp,
         ];
-        let opcode_type = if self.consume_first_match(&token_types) {
+        let opcode_token = if self.consume_first_match(&token_types) {
             match self.previous() {
-                Some(t) => t.token_type.clone(),
+                Some(t) => t.clone(),
                 None => panic!("Expected token not found"),
             }
         } else {
             return Err(AssemblerErr::ExpectedOpcode);
         };
-        match opcode_type {
+        match opcode_token.token_type {
             TokenType::Jmp => {
                 let op_1 = if self.consume_match(TokenType::LabelOp) {
                     match self.previous() {
@@ -235,7 +235,8 @@ impl<'a> Assembler<'a> {
             | TokenType::Bgt
             | TokenType::Bgt
             | TokenType::Bgt
-            | TokenType::Bal => {
+            | TokenType::Bal
+            | TokenType::Lda => {
                 let op_1 = if self.consume_match(TokenType::Rg) {
                     match self.previous() {
                         Some(t) => t.clone(),
@@ -244,7 +245,7 @@ impl<'a> Assembler<'a> {
                 } else {
                     return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
                 };
-                let rs = match Self::i32_try_from_rg_str(&op_1.lexeme) {
+                let rg = match Self::i32_try_from_rg_str(&op_1.lexeme) {
                     Ok(i) => i,
                     Err(_) => return Err(AssemblerErr::InvalidRg(op_1.lexeme.clone())),
                 };
@@ -263,13 +264,13 @@ impl<'a> Assembler<'a> {
                     Some(o) => o.offset,
                     None => return Err(AssemblerErr::NonexistentLabel(op_2.lexeme.clone())),
                 };
-                let opcode = match Opcode::try_from(opcode_type) {
+                let opcode = match Opcode::try_from(opcode_token.token_type) {
                     Ok(o) => o,
                     Err(_) => return Err(AssemblerErr::ExpectedOpcode),
                 };
                 Ok(Instruction {
                     opcode,
-                    op1: rs,
+                    op1: rg,
                     op2: offset as i32,
                 })
             }
@@ -277,7 +278,16 @@ impl<'a> Assembler<'a> {
             // TokenType::Blt,
             // TokenType::Brz,
             // TokenType::Bal,
-            TokenType::Mov => {
+            TokenType::Mov
+            | TokenType::And
+            | TokenType::Or
+            | TokenType::Not
+            | TokenType::Cmp
+            | TokenType::Allc => {
+                let opcode = match Opcode::try_from(opcode_token.token_type) {
+                    Ok(o) => o,
+                    Err(_) => return Err(AssemblerErr::ExpectedOpcode),
+                };
                 let rd = if self.consume_match(TokenType::Rg) {
                     match self.previous() {
                         Some(t) => match Self::i32_try_from_rg_str(&t.lexeme) {
@@ -303,38 +313,119 @@ impl<'a> Assembler<'a> {
                 } else {
                     return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
                 };
-                // let rs = if self.consume_match(TokenType::Rg) {
-                //     match self.previous() {
-                //         Some(t) => {
-                //             match Self::from_rg_str(&t.lexeme) {
-                //                 Ok(i) => i,
-                //                 Err(_) => return Err(AssemblerErr::InvalidRg(op_1.lexeme.clone())),
-                //             },
-                //         }
-                //         None => panic!("Expected token not found"),
-                //     }
-                // } else {
-                //     return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
-                // };
                 Ok(Instruction {
-                    opcode: Opcode::Mov,
-                    op1: 0,
-                    op2: 0,
+                    opcode,
+                    op1: rd,
+                    op2: rs,
                 })
             }
-            // TokenType::Movi,
-            // TokenType::Lda,
-            // TokenType::Str,
-            // TokenType::Ldr,
-            // TokenType::Stb,
-            // TokenType::Ldb,
+            TokenType::Movi => {
+                let rd = if self.consume_match(TokenType::Rg) {
+                    match self.previous() {
+                        Some(t) => match Self::i32_try_from_rg_str(&t.lexeme) {
+                            Ok(i) => i,
+                            Err(_) => return Err(AssemblerErr::InvalidRg(t.lexeme.clone())),
+                        },
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
+                };
+                if !self.consume_match(TokenType::Comma) {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Comma));
+                }
+                let token_types = [TokenType::IntImm, TokenType::CharImm];
+                let imm = if self.consume_first_match(&token_types) {
+                    let imm_token = match self.previous() {
+                        Some(t) => t,
+                        None => return Err(AssemblerErr::ExpectedTokenType(TokenType::IntImm)),
+                    };
+                    match imm_token.token_type {
+                        TokenType::IntImm => {
+                            match Self::i32_try_from_int_imm_str(&imm_token.lexeme) {
+                                Ok(i) => i,
+                                Err(_) => {
+                                    return Err(AssemblerErr::InvalidToken(imm_token.clone()))
+                                }
+                            }
+                        }
+                        TokenType::CharImm => {
+                            match Self::i32_try_from_char_imm_str(&imm_token.lexeme) {
+                                Ok(i) => i,
+                                Err(_) => {
+                                    return Err(AssemblerErr::InvalidToken(imm_token.clone()))
+                                }
+                            }
+                        }
+                        _ => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::IntImm));
+                };
+                Ok(Instruction {
+                    opcode: Opcode::Movi,
+                    op1: rd,
+                    op2: imm,
+                })
+            }
+            TokenType::Str | TokenType::Ldr | TokenType::Stb | TokenType::Ldb => {
+                let mut opcode = Opcode::Str;
+                let t_1 = if self.consume_match(TokenType::Rg) {
+                    match self.previous() {
+                        Some(t) => t,
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
+                };
+                let op_1 = match Self::i32_try_from_rg_str(&opcode_token.lexeme) {
+                    Ok(i) => i,
+                    Err(_) => return Err(AssemblerErr::InvalidRg(opcode_token.lexeme.clone())),
+                };
+                if !self.consume_match(TokenType::Comma) {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::Comma));
+                }
+                let token_types = [TokenType::LabelOp, TokenType::Rg];
+                let op_2 = if self.consume_first_match(&token_types) {
+                    match self.previous() {
+                        Some(t) => {
+                            opcode = match Opcode::try_from((
+                                opcode_token.token_type,
+                                t.token_type.clone(),
+                            )) {
+                                Ok(o) => o,
+                                Err(_) => return Err(AssemblerErr::ExpectedOpcode),
+                            };
+                            match t.token_type {
+                                TokenType::LabelOp => {
+                                    self.symbol_table.get_expect(&t.lexeme).offset as i32
+                                }
+                                TokenType::Rg => match Self::i32_try_from_rg_str(&t.lexeme) {
+                                    Ok(i) => i,
+                                    Err(e) => {
+                                        return Err(AssemblerErr::InvalidRg(t.lexeme.clone()))
+                                    }
+                                },
+                                _ => {
+                                    return Err(AssemblerErr::ExpectedTokenType(TokenType::LabelOp))
+                                }
+                            }
+                        }
+                        None => panic!("Expected token not found"),
+                    }
+                } else {
+                    return Err(AssemblerErr::ExpectedTokenType(TokenType::LabelOp));
+                };
+
+                Ok(Instruction {
+                    opcode,
+                    op1: op_1,
+                    op2: op_2,
+                })
+            }
             // TokenType::Push,
             // TokenType::Pop,
             // TokenType::Peek,
-            // TokenType::And,
-            // TokenType::Or,
-            // TokenType::Not,
-            // TokenType::Cmp,
             // TokenType::Cmpi,
             // TokenType::Add,
             // TokenType::Adi,
@@ -344,9 +435,8 @@ impl<'a> Assembler<'a> {
             // TokenType::Div,
             // TokenType::Divi,
             // TokenType::Alci,
-            // TokenType::Allc,
             // TokenType::Trp,
-            _ => return Err(AssemblerErr::InvalidToken),
+            _ => return Err(AssemblerErr::InvalidToken(opcode_token)),
         }
     }
     fn consume_num_bytes_dir(&mut self) -> usize {
@@ -413,7 +503,7 @@ impl<'a> Assembler<'a> {
 
 pub enum AssemblerErr {
     ExpectedTokenType(TokenType),
-    InvalidToken,
+    InvalidToken(Token),
     ExpectedOpcode,
     InvalidRg(String),
     NonexistentLabel(String),

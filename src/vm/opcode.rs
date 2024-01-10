@@ -185,6 +185,35 @@ impl TryFrom<TokenType> for Opcode {
     }
 }
 
+impl TryFrom<(TokenType, TokenType)> for Opcode {
+    type Error = ();
+    fn try_from(value: (TokenType, TokenType)) -> Result<Self, Self::Error> {
+        Ok(match value.0 {
+            TokenType::Str => match value.1 {
+                TokenType::LabelOp => Opcode::Str,
+                TokenType::Rg => Opcode::Str2,
+                _ => return Err(()),
+            },
+            TokenType::Ldr => match value.1 {
+                TokenType::LabelOp => Opcode::Ldr,
+                TokenType::Rg => Opcode::Ldr2,
+                _ => return Err(()),
+            },
+            TokenType::Stb => match value.1 {
+                TokenType::LabelOp => Opcode::Stb,
+                TokenType::Rg => Opcode::Stb2,
+                _ => return Err(()),
+            },
+            TokenType::Ldb => match value.1 {
+                TokenType::LabelOp => Opcode::Ldb,
+                TokenType::Rg => Opcode::Ldb2,
+                _ => return Err(()),
+            },
+            _ => return Err(()),
+        })
+    }
+}
+
 #[derive(Debug)]
 pub enum OpcodeErr {
     InvalidOpcode(i32),
