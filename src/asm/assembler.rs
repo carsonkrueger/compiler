@@ -3,7 +3,7 @@ use std::{f32::consts::PI, fs::File};
 
 use crate::vm::{instruction::Instruction, opcode::Opcode};
 
-use super::{
+use crate::asm::{
     directive::Directive,
     symbol::Symbol,
     symbol_table::SymbolTable,
@@ -589,7 +589,7 @@ impl<'a> Assembler<'a> {
             }
             12
         } else {
-            if let Some(t) = self.previous() {
+            if let Some(t) = self.previous().to_owned() {
                 println!("No matching byt or ins: {:?}", t);
             }
             0
@@ -626,4 +626,121 @@ pub enum AssemblerErr {
     ExpectedOpcode,
     InvalidRg(String),
     NonexistentLabel(String),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_consume_match() {
+        let tokens = vec![
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Jmp,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Ldb,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Label,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::BytDir,
+                line: 0,
+            },
+        ];
+        let mut asm = Assembler::new(&tokens, &String::from("test"));
+
+        assert!(asm.consume_match(TokenType::Jmp));
+        assert!(!asm.consume_match(TokenType::Label));
+        assert!(asm.consume_match(TokenType::Ldb));
+        assert!(asm.consume_match(TokenType::Label));
+        assert!(!asm.consume_match(TokenType::Jmp));
+        assert!(asm.consume_match(TokenType::BytDir));
+    }
+
+    #[test]
+    fn test_consume_first_match() {
+        let tokens = vec![
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Jmp,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Ldb,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Label,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::BytDir,
+                line: 0,
+            },
+        ];
+        let mut asm = Assembler::new(&tokens, &String::from("test"));
+
+        assert!(asm.consume_first_match(&[TokenType::Jmp, TokenType::Label, TokenType::Add]));
+        assert!(!asm.consume_first_match(&[TokenType::BytDir, TokenType::Label, TokenType::Add]));
+        assert!(asm.consume_first_match(&[TokenType::Jmp, TokenType::Ldb, TokenType::Add]));
+        assert!(asm.consume_first_match(&[TokenType::Jmp, TokenType::Label, TokenType::Add]));
+        assert!(!asm.consume_first_match(&[TokenType::Jmp, TokenType::Label, TokenType::IntImm]));
+        assert!(!asm.consume_first_match(&[
+            TokenType::CharImm,
+            TokenType::LabelOp,
+            TokenType::IntImm
+        ]));
+        assert!(asm.consume_first_match(&[TokenType::Jmr, TokenType::BytDir, TokenType::Add]));
+    }
+
+    #[test]
+    fn test_peek_match() {
+        let tokens = vec![
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Jmp,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Ldb,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Label,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::BytDir,
+                line: 0,
+            },
+        ];
+        let mut asm = Assembler::new(&tokens, &String::from("test"));
+
+        assert!(asm.peek_match(TokenType::Jmp));
+        asm.advance();
+        assert!(!asm.peek_match(TokenType::Label));
+        assert!(asm.peek_match(TokenType::Ldb));
+        asm.advance();
+        assert!(asm.peek_match(TokenType::Label));
+        asm.advance();
+        assert!(!asm.peek_match(TokenType::LabelOp));
+        assert!(!asm.peek_match(TokenType::IntDir));
+        assert!(!asm.peek_match(TokenType::CharImm));
+        assert!(asm.peek_match(TokenType::BytDir));
+    }
 }
