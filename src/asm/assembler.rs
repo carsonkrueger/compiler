@@ -664,6 +664,7 @@ mod tests {
         assert!(asm.consume_match(TokenType::Label));
         assert!(!asm.consume_match(TokenType::Jmp));
         assert!(asm.consume_match(TokenType::BytDir));
+        assert!(!asm.consume_match(TokenType::Stb));
     }
 
     #[test]
@@ -742,5 +743,47 @@ mod tests {
         assert!(!asm.peek_match(TokenType::IntDir));
         assert!(!asm.peek_match(TokenType::CharImm));
         assert!(asm.peek_match(TokenType::BytDir));
+    }
+
+    #[test]
+    fn test_peek_first_match() {
+        let tokens = vec![
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Jmp,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Ldb,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Label,
+                line: 0,
+            },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::BytDir,
+                line: 0,
+            },
+        ];
+        let mut asm = Assembler::new(&tokens, &String::from("test"));
+
+        assert!(asm.peek_first_match(&[TokenType::Jmp, TokenType::Label, TokenType::Add]));
+        asm.advance();
+        assert!(!asm.peek_first_match(&[TokenType::BytDir, TokenType::Label, TokenType::Add]));
+        assert!(asm.peek_first_match(&[TokenType::Jmp, TokenType::Ldb, TokenType::Add]));
+        asm.advance();
+        assert!(asm.peek_first_match(&[TokenType::Jmp, TokenType::Label, TokenType::Add]));
+        asm.advance();
+        assert!(!asm.peek_first_match(&[TokenType::Jmp, TokenType::Label, TokenType::IntImm]));
+        assert!(!asm.peek_first_match(&[
+            TokenType::CharImm,
+            TokenType::LabelOp,
+            TokenType::IntImm
+        ]));
+        assert!(asm.consume_first_match(&[TokenType::Jmr, TokenType::BytDir, TokenType::Add]));
     }
 }
