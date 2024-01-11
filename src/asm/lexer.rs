@@ -46,11 +46,7 @@ impl Lexer {
         self.unprocessed_lexeme.pop_front()
     }
     fn lexeme_type(&self, lexeme: &String) -> Option<TokenType> {
-        if self.patterns.label.is_match(&lexeme) {
-            Some(TokenType::Label)
-        } else if self.patterns.label_op.is_match(&lexeme) {
-            Some(TokenType::LabelOp)
-        } else if self.patterns.i_int.is_match(&lexeme) {
+        if self.patterns.i_int.is_match(&lexeme) {
             Some(TokenType::IntImm)
         } else if self.patterns.i_str.is_match(&lexeme) {
             Some(TokenType::StrImm)
@@ -138,6 +134,10 @@ impl Lexer {
             Some(TokenType::Trp)
         } else if self.patterns.comment.is_match(&lexeme) {
             Some(TokenType::Comment)
+        } else if self.patterns.label.is_match(&lexeme) {
+            Some(TokenType::Label)
+        } else if self.patterns.label_op.is_match(&lexeme) {
+            Some(TokenType::LabelOp)
         } else {
             None
         }
@@ -163,10 +163,7 @@ impl Iterator for Lexer {
         let lexeme = loop {
             match self.next_lexeme() {
                 Some(l) => match self.lexeme_type(&l) {
-                    Some(TokenType::Comment) => {
-                        println!("Skipping {}", l);
-                        continue;
-                    }
+                    Some(TokenType::Comment) => continue,
                     Some(t) => break l,
                     None => panic!("Invalid token: {} on line: {}", l, self.line_index),
                 },
@@ -179,6 +176,13 @@ impl Iterator for Lexer {
                 }
             }
         };
+
+        if let Some(l) = self.lexeme_type(&lexeme) {
+            match l {
+                TokenType::Comment => return None,
+                _ => (),
+            };
+        }
 
         Some(Token {
             lexeme: lexeme.to_owned(),

@@ -1,7 +1,8 @@
-// use std::os::windows::fs::FileExt;
+use asm::assembler::Assembler;
 use clap::Parser;
-use util::file_ext::file_ext;
-use util::file_ext::FileExt;
+use util::file_util::file_ext;
+use util::file_util::file_name;
+use util::file_util::FileExt;
 
 #[allow(unused)]
 mod asm;
@@ -48,8 +49,12 @@ fn main() {
             let asm_tokens: Vec<asm::token::Token> = asm_lexer.into_iter().collect();
 
             for t in &asm_tokens {
-                println!("{}", t.lexeme);
+                println!("{:?}", t);
             }
+
+            let file_name = file_name(&args.file_path).unwrap().to_owned();
+            let mut assembler = Assembler::new(&asm_tokens, &file_name);
+            assembler.run();
         }
         // VM
         FileExt::Bin => {

@@ -63,7 +63,7 @@ impl Patterns {
             label_op: Regex::new(r"^[A-Za-z][A-Za-z0-9_]*").unwrap(),
             i_int: Regex::new(r"^#-?(0|[1-9][0-9]*)").unwrap(),
             i_char: Regex::new(r"^'.*'").unwrap(),
-            i_str: Regex::new("\".*\"").unwrap(),
+            i_str: Regex::new("^\".*\"").unwrap(),
             comma: Regex::new(r"^,").unwrap(),
             int_dir: Regex::new(r"^\.INT").unwrap(),
             byt_dir: Regex::new(r"^\.BYT").unwrap(),
@@ -104,8 +104,9 @@ impl Patterns {
             alci: Regex::new(r"^ALCI").unwrap(),
             allc: Regex::new(r"^ALLC").unwrap(),
             trp: Regex::new(r"^TRP").unwrap(),
-            comment: Regex::new(r";.*").unwrap(),
+            comment: Regex::new(r"^;.*").unwrap(),
             any: Regex::new("\\.?\\w+:?|,|#-?[0-9]+|\".*\"|'.*'|;.*").unwrap(),
+            // any: Regex::new("")
         }
     }
 }

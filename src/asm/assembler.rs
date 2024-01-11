@@ -18,12 +18,12 @@ pub struct Assembler<'a> {
 }
 
 impl<'a> Assembler<'a> {
-    pub fn new(tokens: &'a Vec<Token>, file_name: String) -> Self {
+    pub fn new(tokens: &'a Vec<Token>, file_name: &String) -> Self {
         Self {
             tokens,
             cur_idx: 0,
             symbol_table: SymbolTable::new(),
-            file_name,
+            file_name: file_name.clone(),
         }
     }
     pub fn run(&mut self) {
@@ -31,18 +31,27 @@ impl<'a> Assembler<'a> {
         self.pass_two();
     }
     fn pass_one(&mut self) {
+        println!("starting pass one");
+        let mut lc = 4;
         while !self.reached_eof() {
             if self.consume_match(TokenType::Label) {
                 let label_token = match self.previous() {
                     Some(t) => t,
                     None => continue,
                 };
-                let symbol = Symbol::new(label_token.clone(), self.consume_num_bytes_dir());
+                let symbol = Symbol::new(label_token.clone(), lc);
                 self.symbol_table.insert(&symbol);
+                println!("inserted: {:?}", symbol);
+            } else {
+                self.advance();
             }
+            println!("adding");
+            lc += self.consume_num_bytes();
         }
     }
     fn pass_two(&mut self) {
+        println!("starting pass two");
+        self.reset();
         let mut writer = File::create(self.file_name.clone() + &String::from(".bin"))
             .expect("Could not create binary file");
         loop {
@@ -52,7 +61,7 @@ impl<'a> Assembler<'a> {
                         "Error writing directive {:?}\nTo file: {}",
                         directive, self.file_name
                     ),
-                    Ok(_) => (),
+                    Ok(_) => println!("wrote directive {:?}", directive),
                 }
                 continue;
             }
@@ -65,7 +74,7 @@ impl<'a> Assembler<'a> {
                         "Error writing instruction {:?} to {}",
                         instruction, self.file_name
                     ),
-                    Ok(_) => (),
+                    Ok(_) => println!("wrote instruction {:?}", instruction),
                 }
                 continue;
             }
@@ -77,6 +86,9 @@ impl<'a> Assembler<'a> {
     }
     fn retract(&mut self) {
         self.cur_idx -= 1;
+    }
+    fn reset(&mut self) {
+        self.cur_idx = 0;
     }
     fn reached_eof(&self) -> bool {
         self.cur_idx >= self.tokens.len()
@@ -90,7 +102,7 @@ impl<'a> Assembler<'a> {
     }
     fn previous(&self) -> Option<&Token> {
         if self.cur_idx > 0 || self.cur_idx <= self.tokens.len() {
-            Some(&self.tokens[self.cur_idx])
+            Some(&self.tokens[self.cur_idx - 1])
         } else {
             None
         }
@@ -116,6 +128,25 @@ impl<'a> Assembler<'a> {
 
             if bool {
                 self.advance();
+                return true;
+            }
+        }
+        false
+    }
+    fn peek_match(&mut self, token_type: TokenType) -> bool {
+        match self.peek() {
+            Some(t) => t.token_type == token_type,
+            None => false,
+        }
+    }
+    /// consumes and advances IF current token matches any token_type in the token_types list argument. Returns true if successfully consumed token.
+    fn peek_first_match(&mut self, token_types: &[TokenType]) -> bool {
+        for typ in token_types {
+            let bool = match self.peek() {
+                Some(t) => t.token_type == *typ,
+                None => return false,
+            };
+            if bool {
                 return true;
             }
         }
@@ -464,41 +495,81 @@ impl<'a> Assembler<'a> {
             _ => return Err(AssemblerErr::InvalidToken(opcode_token)),
         }
     }
-    fn consume_num_bytes_dir(&mut self) -> usize {
-        let token_types = [TokenType::BytDir, TokenType::IntDir, TokenType::StrDir];
-        if !self.consume_first_match(&token_types) {
-            return 0;
-        }
-
-        let dir_type = match self.previous() {
-            Some(t) => t.clone(),
-            None => return 0,
-        };
-
-        let token_types = [TokenType::CharImm, TokenType::IntImm, TokenType::StrImm];
-        if self.consume_first_match(&token_types) {
-            return match self.previous() {
-                Some(t) => {
-                    if t.token_type == TokenType::StrImm {
-                        t.lexeme.len() - 2 as usize
-                    } else {
-                        match dir_type.token_type {
-                            TokenType::BytDir => 1,
-                            TokenType::IntDir => 4,
-                            TokenType::StrDir => 1,
-                            _ => 0,
+    fn consume_num_bytes(&mut self) -> usize {
+        let dir_token_types = [TokenType::BytDir, TokenType::IntDir, TokenType::StrDir];
+        let ins_token_types = [
+            TokenType::Jmp,
+            TokenType::Jmr,
+            TokenType::Bnz,
+            TokenType::Bgt,
+            TokenType::Blt,
+            TokenType::Brz,
+            TokenType::Bal,
+            TokenType::Mov,
+            TokenType::Movi,
+            TokenType::Lda,
+            TokenType::Str,
+            TokenType::Ldr,
+            TokenType::Stb,
+            TokenType::Ldb,
+            TokenType::Push,
+            TokenType::Pop,
+            TokenType::Peek,
+            TokenType::And,
+            TokenType::Or,
+            TokenType::Not,
+            TokenType::Cmp,
+            TokenType::Cmpi,
+            TokenType::Add,
+            TokenType::Adi,
+            TokenType::Sub,
+            TokenType::Mul,
+            TokenType::Muli,
+            TokenType::Div,
+            TokenType::Divi,
+            TokenType::Alci,
+            TokenType::Allc,
+            TokenType::Trp,
+        ];
+        // found directive token
+        if self.consume_first_match(&dir_token_types) {
+            let num_bytes = match self.previous() {
+                Some(t) => match t.token_type {
+                    TokenType::BytDir => 1,
+                    TokenType::IntDir => 4,
+                    TokenType::StrDir => {
+                        if self.consume_match(TokenType::StrImm) {
+                            match self.previous() {
+                                Some(t2) => t2.lexeme.len() - 2 + 1, // - 2 for "" and + 1 for pascal byte
+                                None => 1,
+                            }
+                        } else {
+                            1
                         }
                     }
-                }
+                    _ => 0,
+                },
                 None => 0,
             };
+            while !self.peek_first_match(&dir_token_types)
+                && !self.peek_first_match(&ins_token_types)
+                && !self.peek_match(TokenType::Label)
+            {
+                self.advance();
+            }
+            num_bytes
         }
-
-        match dir_type.token_type {
-            TokenType::BytDir => 1,
-            TokenType::IntDir => 4,
-            TokenType::StrDir => 1,
-            _ => 0,
+        // found opcode instruction token
+        else if self.consume_first_match(&ins_token_types) {
+            while !self.peek_first_match(&dir_token_types)
+                && !self.peek_first_match(&ins_token_types)
+                && !self.peek_match(TokenType::Label)
+            {
+                self.advance();
+            }
+            12
+        } else {
+            0
         }
     }
     fn i32_try_from_rg_str(rg_str: &String) -> Result<i32, ()> {
