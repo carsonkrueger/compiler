@@ -45,9 +45,11 @@ impl<'a> Assembler<'a> {
             } else {
                 self.advance();
             }
-            println!("adding");
-            lc += self.consume_num_bytes();
+            let num = self.consume_num_bytes();
+            println!("adding {}", num);
+            lc += num;
         }
+        println!("finished pass one")
     }
     fn pass_two(&mut self) {
         println!("starting pass two");
@@ -132,14 +134,20 @@ impl<'a> Assembler<'a> {
             }
         }
         false
+        // let typ = match self.peek() {
+        //     Some(t) => t.token_type.to_owned(),
+        //     None => return false,
+        // };
+        // token_types.iter().find(|x| **x == typ).is_some()
     }
+    /// Does NOT consume, returning true if the current token matches
     fn peek_match(&mut self, token_type: TokenType) -> bool {
         match self.peek() {
             Some(t) => t.token_type == token_type,
             None => false,
         }
     }
-    /// consumes and advances IF current token matches any token_type in the token_types list argument. Returns true if successfully consumed token.
+    /// Does NOT consume, returning true if the current token matches any of the token_types
     fn peek_first_match(&mut self, token_types: &[TokenType]) -> bool {
         for typ in token_types {
             let bool = match self.peek() {
@@ -534,21 +542,24 @@ impl<'a> Assembler<'a> {
         // found directive token
         if self.consume_first_match(&dir_token_types) {
             let num_bytes = match self.previous() {
-                Some(t) => match t.token_type {
-                    TokenType::BytDir => 1,
-                    TokenType::IntDir => 4,
-                    TokenType::StrDir => {
-                        if self.consume_match(TokenType::StrImm) {
-                            match self.previous() {
-                                Some(t2) => t2.lexeme.len() - 2 + 1, // - 2 for "" and + 1 for pascal byte
-                                None => 1,
+                Some(t) => {
+                    println!("found directive: {:?}", t);
+                    match t.token_type {
+                        TokenType::BytDir => 1,
+                        TokenType::IntDir => 4,
+                        TokenType::StrDir => {
+                            if self.consume_match(TokenType::StrImm) {
+                                match self.previous() {
+                                    Some(t2) => t2.lexeme.len() - 2 + 1, // - 2 for "" and + 1 for pascal byte
+                                    None => 1,
+                                }
+                            } else {
+                                1
                             }
-                        } else {
-                            1
                         }
+                        _ => 0,
                     }
-                    _ => 0,
-                },
+                }
                 None => 0,
             };
             while !self.peek_first_match(&dir_token_types)
@@ -556,19 +567,31 @@ impl<'a> Assembler<'a> {
                 && !self.peek_match(TokenType::Label)
             {
                 self.advance();
+                if let Some(t) = self.previous() {
+                    println!("consumed garbage: {:?}", t);
+                }
             }
             num_bytes
         }
         // found opcode instruction token
         else if self.consume_first_match(&ins_token_types) {
+            if let Some(t) = self.previous() {
+                println!("found directive: {:?}", t);
+            }
             while !self.peek_first_match(&dir_token_types)
                 && !self.peek_first_match(&ins_token_types)
                 && !self.peek_match(TokenType::Label)
             {
                 self.advance();
+                if let Some(t) = self.previous() {
+                    println!("consumed garbage: {:?}", t);
+                }
             }
             12
         } else {
+            if let Some(t) = self.previous() {
+                println!("No matching byt or ins: {:?}", t);
+            }
             0
         }
     }
