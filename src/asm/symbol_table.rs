@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{symbol::Symbol, token::Token};
+use crate::asm::{symbol::Symbol, token::Token};
 
 pub struct SymbolTable {
     table: HashMap<String, Symbol>,

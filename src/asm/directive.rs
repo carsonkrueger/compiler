@@ -70,26 +70,35 @@ impl Directive {
             _ => Err(()),
         }
     }
-    fn parse_char(string: String) -> Result<u8, ()> {
-        let pattern = Regex::new(r"[^']+").unwrap();
-        let m = match pattern.find(&string) {
-            Some(m) => m,
-            None => return Err(()),
-        };
-        match m.as_str().parse::<u8>() {
-            Ok(i) => Ok(i),
-            Err(_) => Err(()),
+    fn parse_char(mut string: String) -> Result<u8, ()> {
+        // let pattern = Regex::new(r"[^']+").unwrap();
+        // let m = match pattern.find(&string) {
+        //     Some(m) => m,
+        //     None => return Err(()),
+        // };
+        string.remove(0);
+        string.remove(string.len() - 1);
+        match string.parse::<char>() {
+            Ok(i) => Ok(i as u8),
+            Err(e) => {
+                println!("Error parsing char as u8: {}", e);
+                Err(())
+            }
         }
     }
-    fn parse_int(string: String) -> Result<i32, ()> {
-        let pattern = Regex::new(r"-?[0-9]+").unwrap();
-        let m = match pattern.find(&string) {
-            Some(m) => m,
-            None => return Err(()),
-        };
-        match m.as_str().parse::<i32>() {
+    fn parse_int(mut string: String) -> Result<i32, ()> {
+        // let pattern = Regex::new(r"-?[0-9]+").unwrap();
+        // let m = match pattern.find(&string) {
+        //     Some(m) => m,
+        //     None => return Err(()),
+        // };
+        string.remove(0);
+        match string.parse::<i32>() {
             Ok(i) => Ok(i),
-            Err(_) => Err(()),
+            Err(e) => {
+                println!("Error parsing i32: {}", e);
+                Err(())
+            }
         }
     }
     // fn parse_str(string: String) -> String {

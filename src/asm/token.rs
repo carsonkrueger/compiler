@@ -64,3 +64,18 @@ impl Token {
         }
     }
 }
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_partial_eq() {
+        assert!(TokenType::Trp == TokenType::Trp);
+        assert!(TokenType::Jmp == TokenType::Jmp);
+        assert!(TokenType::Label != TokenType::Trp);
+        assert!(TokenType::Ldb != TokenType::Trp);
+        assert!(TokenType::IntImm == TokenType::IntImm);
+        assert!(TokenType::Add != TokenType::Trp);
+        assert!(TokenType::Stb == TokenType::Stb);
+    }
+}

@@ -1,7 +1,46 @@
 use core::panic;
+use std::io::Write;
+use std::process::exit;
 use std::{f32::consts::PI, fs::File};
 
 use crate::vm::{instruction::Instruction, opcode::Opcode};
+
+const INS_TOKEN_TYPES: [TokenType; 32] = [
+    TokenType::Jmp,
+    TokenType::Jmr,
+    TokenType::Bnz,
+    TokenType::Bgt,
+    TokenType::Blt,
+    TokenType::Brz,
+    TokenType::Bal,
+    TokenType::Mov,
+    TokenType::Movi,
+    TokenType::Lda,
+    TokenType::Str,
+    TokenType::Ldr,
+    TokenType::Stb,
+    TokenType::Ldb,
+    TokenType::Push,
+    TokenType::Pop,
+    TokenType::Peek,
+    TokenType::And,
+    TokenType::Or,
+    TokenType::Not,
+    TokenType::Cmp,
+    TokenType::Cmpi,
+    TokenType::Add,
+    TokenType::Adi,
+    TokenType::Sub,
+    TokenType::Mul,
+    TokenType::Muli,
+    TokenType::Div,
+    TokenType::Divi,
+    TokenType::Alci,
+    TokenType::Allc,
+    TokenType::Trp,
+];
+
+const DIR_TOKEN_TYPES: [TokenType; 3] = [TokenType::BytDir, TokenType::IntDir, TokenType::StrDir];
 
 use crate::asm::{
     directive::Directive,
@@ -15,6 +54,7 @@ pub struct Assembler<'a> {
     cur_idx: usize,
     symbol_table: SymbolTable,
     file_name: String,
+    init_pc: i32,
 }
 
 impl<'a> Assembler<'a> {
@@ -24,6 +64,7 @@ impl<'a> Assembler<'a> {
             cur_idx: 0,
             symbol_table: SymbolTable::new(),
             file_name: file_name.clone(),
+            init_pc: 4,
         }
     }
     pub fn run(&mut self) {
@@ -31,54 +72,61 @@ impl<'a> Assembler<'a> {
         self.pass_two();
     }
     fn pass_one(&mut self) {
-        println!("starting pass one");
         let mut lc = 4;
         while !self.reached_eof() {
             if self.consume_match(TokenType::Label) {
-                let label_token = match self.previous() {
-                    Some(t) => t,
+                let mut label_token = match self.previous() {
+                    Some(t) => t.clone(),
                     None => continue,
                 };
-                let symbol = Symbol::new(label_token.clone(), lc);
+                label_token.lexeme.remove(label_token.lexeme.len() - 1);
+                let symbol = Symbol::new(label_token, lc);
                 self.symbol_table.insert(&symbol);
-                println!("inserted: {:?}", symbol);
-            } else {
-                self.advance();
+            }
+            // set init pc
+            if self.peek_first_match(&INS_TOKEN_TYPES) && self.init_pc == 4 {
+                self.init_pc = lc as i32;
             }
             let num = self.consume_num_bytes();
-            println!("adding {}", num);
             lc += num;
         }
-        println!("finished pass one")
     }
     fn pass_two(&mut self) {
-        println!("starting pass two");
         self.reset();
         let mut writer = File::create(self.file_name.clone() + &String::from(".bin"))
             .expect("Could not create binary file");
-        loop {
+        // write init pc
+        writer.write_all(self.init_pc.to_le_bytes().as_slice());
+        while !self.reached_eof() {
             if let Some(directive) = self.consume_next_directive() {
                 match directive.write(&mut writer) {
                     Err(e) => panic!(
                         "Error writing directive {:?}\nTo file: {}",
                         directive, self.file_name
                     ),
-                    Ok(_) => println!("wrote directive {:?}", directive),
+                    Ok(_) => (),
                 }
                 continue;
             }
             break;
         }
-        loop {
-            if let Ok(instruction) = self.consume_next_instruction() {
-                match instruction.write(&mut writer) {
-                    Err(e) => panic!(
-                        "Error writing instruction {:?} to {}",
-                        instruction, self.file_name
-                    ),
-                    Ok(_) => println!("wrote instruction {:?}", instruction),
+        while !self.reached_eof() {
+            match self.consume_next_instruction() {
+                Ok(instruction) => {
+                    match instruction.write(&mut writer) {
+                        Err(e) => panic!(
+                            "Error writing instruction {:?} to {}",
+                            instruction, self.file_name
+                        ),
+                        Ok(_) => (),
+                    }
+                    continue;
                 }
-                continue;
+                Err(e) => {
+                    // println!("Error line: {}", self.peek().unwrap().line);
+                    println!("Error creating instruction: {:?}", e);
+                    exit(1);
+                }
             }
             break;
         }
@@ -193,41 +241,7 @@ impl<'a> Assembler<'a> {
     }
     fn consume_next_instruction(&mut self) -> Result<Instruction, AssemblerErr> {
         self.consume_match(TokenType::Label);
-        let token_types = [
-            TokenType::Jmp,
-            TokenType::Jmr,
-            TokenType::Bnz,
-            TokenType::Bgt,
-            TokenType::Blt,
-            TokenType::Brz,
-            TokenType::Bal,
-            TokenType::Mov,
-            TokenType::Movi,
-            TokenType::Lda,
-            TokenType::Str,
-            TokenType::Ldr,
-            TokenType::Stb,
-            TokenType::Ldb,
-            TokenType::Push,
-            TokenType::Pop,
-            TokenType::Peek,
-            TokenType::And,
-            TokenType::Or,
-            TokenType::Not,
-            TokenType::Cmp,
-            TokenType::Cmpi,
-            TokenType::Add,
-            TokenType::Adi,
-            TokenType::Sub,
-            TokenType::Mul,
-            TokenType::Muli,
-            TokenType::Div,
-            TokenType::Divi,
-            TokenType::Alci,
-            TokenType::Allc,
-            TokenType::Trp,
-        ];
-        let opcode_token = if self.consume_first_match(&token_types) {
+        let opcode_token = if self.consume_first_match(&INS_TOKEN_TYPES) {
             match self.previous() {
                 Some(t) => t.clone(),
                 None => panic!("Expected token not found"),
@@ -430,7 +444,7 @@ impl<'a> Assembler<'a> {
                 } else {
                     return Err(AssemblerErr::ExpectedTokenType(TokenType::Rg));
                 };
-                let op_1 = match Self::i32_try_from_rg_str(&opcode_token.lexeme) {
+                let op_1 = match Self::i32_try_from_rg_str(&t_1.lexeme) {
                     Ok(i) => i,
                     Err(_) => return Err(AssemblerErr::InvalidRg(opcode_token.lexeme.clone())),
                 };
@@ -504,46 +518,10 @@ impl<'a> Assembler<'a> {
         }
     }
     fn consume_num_bytes(&mut self) -> usize {
-        let dir_token_types = [TokenType::BytDir, TokenType::IntDir, TokenType::StrDir];
-        let ins_token_types = [
-            TokenType::Jmp,
-            TokenType::Jmr,
-            TokenType::Bnz,
-            TokenType::Bgt,
-            TokenType::Blt,
-            TokenType::Brz,
-            TokenType::Bal,
-            TokenType::Mov,
-            TokenType::Movi,
-            TokenType::Lda,
-            TokenType::Str,
-            TokenType::Ldr,
-            TokenType::Stb,
-            TokenType::Ldb,
-            TokenType::Push,
-            TokenType::Pop,
-            TokenType::Peek,
-            TokenType::And,
-            TokenType::Or,
-            TokenType::Not,
-            TokenType::Cmp,
-            TokenType::Cmpi,
-            TokenType::Add,
-            TokenType::Adi,
-            TokenType::Sub,
-            TokenType::Mul,
-            TokenType::Muli,
-            TokenType::Div,
-            TokenType::Divi,
-            TokenType::Alci,
-            TokenType::Allc,
-            TokenType::Trp,
-        ];
         // found directive token
-        if self.consume_first_match(&dir_token_types) {
+        if self.consume_first_match(&DIR_TOKEN_TYPES) {
             let num_bytes = match self.previous() {
                 Some(t) => {
-                    println!("found directive: {:?}", t);
                     match t.token_type {
                         TokenType::BytDir => 1,
                         TokenType::IntDir => 4,
@@ -562,36 +540,26 @@ impl<'a> Assembler<'a> {
                 }
                 None => 0,
             };
-            while !self.peek_first_match(&dir_token_types)
-                && !self.peek_first_match(&ins_token_types)
+            while !self.peek_first_match(&DIR_TOKEN_TYPES)
+                && !self.peek_first_match(&INS_TOKEN_TYPES)
                 && !self.peek_match(TokenType::Label)
+                && !self.reached_eof()
             {
                 self.advance();
-                if let Some(t) = self.previous() {
-                    println!("consumed garbage: {:?}", t);
-                }
             }
             num_bytes
         }
         // found opcode instruction token
-        else if self.consume_first_match(&ins_token_types) {
-            if let Some(t) = self.previous() {
-                println!("found directive: {:?}", t);
-            }
-            while !self.peek_first_match(&dir_token_types)
-                && !self.peek_first_match(&ins_token_types)
+        else if self.consume_first_match(&INS_TOKEN_TYPES) {
+            while !self.peek_first_match(&DIR_TOKEN_TYPES)
+                && !self.peek_first_match(&INS_TOKEN_TYPES)
                 && !self.peek_match(TokenType::Label)
+                && !self.reached_eof()
             {
                 self.advance();
-                if let Some(t) = self.previous() {
-                    println!("consumed garbage: {:?}", t);
-                }
             }
             12
         } else {
-            if let Some(t) = self.previous().to_owned() {
-                println!("No matching byt or ins: {:?}", t);
-            }
             0
         }
     }
@@ -620,6 +588,7 @@ impl<'a> Assembler<'a> {
     }
 }
 
+#[derive(Debug)]
 pub enum AssemblerErr {
     ExpectedTokenType(TokenType),
     InvalidToken(Token),
@@ -690,6 +659,11 @@ mod tests {
                 token_type: TokenType::BytDir,
                 line: 0,
             },
+            Token {
+                lexeme: String::from("JMP"),
+                token_type: TokenType::Jmp,
+                line: 10,
+            },
         ];
         let mut asm = Assembler::new(&tokens, &String::from("test"));
 
@@ -704,6 +678,7 @@ mod tests {
             TokenType::IntImm
         ]));
         assert!(asm.consume_first_match(&[TokenType::Jmr, TokenType::BytDir, TokenType::Add]));
+        assert!(asm.consume_first_match(&INS_TOKEN_TYPES));
     }
 
     #[test]

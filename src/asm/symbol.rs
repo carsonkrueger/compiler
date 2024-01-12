@@ -1,4 +1,4 @@
-use super::token::Token;
+use crate::asm::token::Token;
 
 #[derive(Debug, Clone)]
 pub struct Symbol {
