@@ -11,19 +11,19 @@ fn execute_test() {
         op2: 69,
     };
     i.execute(&mut cpu);
-    assert_eq!(cpu.pc, 5);
+    assert_eq!(cpu.get_pc(), 5);
 
     i.op1 = 3;
     i.execute(&mut cpu);
-    assert_eq!(cpu.pc, 3);
+    assert_eq!(cpu.get_pc(), 3);
 
     i.op1 = 11;
     i.execute(&mut cpu);
-    assert_eq!(cpu.pc, 11);
+    assert_eq!(cpu.get_pc(), 11);
 
     i.op1 = 500;
     i.execute(&mut cpu);
-    assert_eq!(cpu.pc, 500);
+    assert_eq!(cpu.get_pc(), 500);
 }
 
 #[test]
@@ -40,4 +40,10 @@ fn mov_test() {
     cpu.rg_at_mut(63).expect("Should not crash").set_i32(100);
     i.execute(&mut cpu);
     assert_eq!(cpu.rg_at_ref(5).expect("Should not crash").get_i32(), 100);
+}
+
+#[test]
+fn movi_test() {
+    let path = String::from("HelloWorld.bin");
+    let mut cpu = Cpu::new(&path);
 }

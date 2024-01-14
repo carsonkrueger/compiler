@@ -1,4 +1,6 @@
-use crate::{asm::token::TokenType, util::reportable::Reportable};
+use std::fmt::Display;
+
+use crate::asm::token::TokenType;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Opcode {
@@ -219,10 +221,10 @@ pub enum OpcodeErr {
     InvalidOpcode(i32),
 }
 
-impl Reportable for OpcodeErr {
-    fn report(&self) -> String {
+impl Display for OpcodeErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            OpcodeErr::InvalidOpcode(o) => format!("Invalid opcode: {}", o),
+            OpcodeErr::InvalidOpcode(o) => write!(f, "Invalid opcode: {}", o),
         }
     }
 }

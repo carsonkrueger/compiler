@@ -1,6 +1,6 @@
 use std::io::{Seek, Write};
 
-use crate::util::{endianness::i32_bytes_le, reportable::Reportable};
+use crate::util::endianness::i32_bytes_le;
 
 use super::{
     cpu::{Cpu, CpuErr, ExecuteResult, VMErr},
@@ -58,7 +58,7 @@ impl Instruction {
         }
     }
     fn jmp(&self, cpu: &mut Cpu) -> ExecuteResult {
-        cpu.pc = self.op1 as usize;
+        cpu.set_pc(self.op1);
         ExecuteResult::Continue
     }
     fn jmr(&self, cpu: &mut Cpu) -> ExecuteResult {
@@ -66,7 +66,7 @@ impl Instruction {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
-        cpu.pc = int as usize;
+        cpu.set_pc(int);
         ExecuteResult::Continue
     }
     fn bnz(&self, cpu: &mut Cpu) -> ExecuteResult {
@@ -75,7 +75,7 @@ impl Instruction {
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
         if int != 0 {
-            cpu.pc = self.op2 as usize;
+            cpu.set_pc(self.op2);
         }
         ExecuteResult::Continue
     }
@@ -85,7 +85,7 @@ impl Instruction {
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
         if int > 0 {
-            cpu.pc = self.op2 as usize;
+            cpu.set_pc(self.op2);
         }
         ExecuteResult::Continue
     }
@@ -95,7 +95,7 @@ impl Instruction {
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
         if int < 0 {
-            cpu.pc = self.op2 as usize;
+            cpu.set_pc(self.op2);
         }
         ExecuteResult::Continue
     }
@@ -105,7 +105,7 @@ impl Instruction {
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
         if int == 0 {
-            cpu.pc = self.op2 as usize;
+            cpu.set_pc(self.op2);
         }
         ExecuteResult::Continue
     }

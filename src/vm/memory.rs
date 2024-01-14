@@ -1,9 +1,6 @@
-use crate::util::{
-    endianness::{as_i32_be, as_i32_le, i32_bytes_be, i32_bytes_le},
-    reportable::Reportable,
-};
-use std::fs::File;
+use crate::util::endianness::{as_i32_be, as_i32_le, i32_bytes_be, i32_bytes_le};
 use std::io::Read;
+use std::{fmt::Display, fs::File};
 
 const MEM_CAPACITY: usize = 102400;
 
@@ -154,25 +151,27 @@ pub enum MemoryErr {
     HeapUnderflow(usize),
 }
 
-impl Reportable for MemoryErr {
-    fn report(&self) -> String {
+impl Display for MemoryErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MemoryErr::HeapOverflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
-            MemoryErr::HeapUnderflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::HeapOverflow(p) => write!(f, "Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::HeapUnderflow(p) => write!(f, "Memory error at position: {}\n{:?}", p, self),
             MemoryErr::OutOfCodeSegBounds(p) => {
-                format!("Memory error at position: {}\n{:?}", p, self)
+                write!(f, "Memory error at position: {}\n{:?}", p, self)
             }
             MemoryErr::OutOfDataSegBounds(p) => {
-                format!("Memory error at position: {}\n{:?}", p, self)
+                write!(f, "Memory error at position: {}\n{:?}", p, self)
             }
             MemoryErr::OutOfMemoryBounds(p) => {
-                format!("Memory error at position: {}\n{:?}", p, self)
+                write!(f, "Memory error at position: {}\n{:?}", p, self)
             }
             MemoryErr::SetInsideCodeSegBounds(p) => {
-                format!("Memory error at position: {}\n{:?}", p, self)
+                write!(f, "Memory error at position: {}\n{:?}", p, self)
             }
-            MemoryErr::StackOverflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
-            MemoryErr::StackUnderflow(p) => format!("Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::StackOverflow(p) => write!(f, "Memory error at position: {}\n{:?}", p, self),
+            MemoryErr::StackUnderflow(p) => {
+                write!(f, "Memory error at position: {}\n{:?}", p, self)
+            }
         }
     }
 }

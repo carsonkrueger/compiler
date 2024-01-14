@@ -20,6 +20,24 @@ impl Register {
     pub fn set_u8(&mut self, num: u8) {
         self.0 = num as i32;
     }
+    pub fn pc_idx() -> usize {
+        65
+    }
+    pub fn sl_idx() -> usize {
+        66
+    }
+    pub fn sb_idx() -> usize {
+        67
+    }
+    pub fn sp_idx() -> usize {
+        68
+    }
+    pub fn fp_idx() -> usize {
+        69
+    }
+    pub fn hp_idx() -> usize {
+        70
+    }
 }
 
 impl Default for Register {
