@@ -41,7 +41,7 @@ impl Memory {
         MEM_CAPACITY
     }
     fn in_data_seg(&self, idx: usize) -> bool {
-        idx >= self.data_seg_start && idx < self.code_seg_start
+        idx >= 0 && idx < self.code_seg_start
     }
     pub fn in_code_seg(&self, idx: usize) -> bool {
         idx >= self.code_seg_start && idx < self.heap_start
@@ -81,6 +81,7 @@ impl Memory {
             return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
         let bytes = i32_bytes_le(int);
+        println!("setting idx {}, to {}", idx, int);
         self.bytes[idx] = bytes[0];
         self.bytes[idx + 1] = bytes[1];
         self.bytes[idx + 2] = bytes[2];
@@ -173,5 +174,31 @@ impl Display for MemoryErr {
                 write!(f, "Memory error at position: {}\n{:?}", p, self)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_any_i32_test() {
+        let mut m = Memory::new(&String::from("we.bin"));
+
+        let mut int = m.get_any_i32(0);
+        assert_eq!(int.unwrap(), 6);
+
+        m = Memory::new(&String::from("HelloWorld.bin"));
+
+        let mut int = m.get_any_i32(0);
+        assert_eq!(int.unwrap(), 101);
+    }
+
+    #[test]
+    fn set_any_i32_test() {
+        let mut m = Memory::new(&String::from("we.bin"));
+
+        m.set_i32(0, 10).expect("");
+        assert_eq!(m.get_any_i32(0).expect(""), 10);
     }
 }
