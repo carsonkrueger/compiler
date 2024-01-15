@@ -41,7 +41,7 @@ impl Memory {
         MEM_CAPACITY
     }
     fn in_data_seg(&self, idx: usize) -> bool {
-        idx >= 0 && idx < self.code_seg_start
+        idx < self.code_seg_start
     }
     pub fn in_code_seg(&self, idx: usize) -> bool {
         idx >= self.code_seg_start && idx < self.heap_start
@@ -77,7 +77,7 @@ impl Memory {
         as_i32_le(&bytes)
     }
     pub fn set_i32(&mut self, idx: usize, int: i32) -> Result<(), MemoryErr> {
-        if !self.in_code_seg(idx) || !self.in_code_seg(idx + 3) {
+        if self.in_code_seg(idx) || self.in_code_seg(idx + 3) {
             return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
         let bytes = i32_bytes_le(int);
