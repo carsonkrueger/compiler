@@ -57,10 +57,12 @@ impl Directive {
                     Ok(Directive::Byt(0))
                 }
             }
-            TokenType::StrImm => {
+            TokenType::StrDir => {
                 if let Some(t) = dir_value {
                     match t.token_type {
-                        TokenType::StrImm => Ok(Directive::Str(t.lexeme.replace("\"", ""))),
+                        TokenType::StrImm => {
+                            Ok(Directive::Str(Directive::parse_str(t.lexeme.clone())))
+                        }
                         _ => Err(()),
                     }
                 } else {
@@ -71,27 +73,22 @@ impl Directive {
         }
     }
     fn parse_char(mut string: String) -> Result<u8, ()> {
-        // let pattern = Regex::new(r"[^']+").unwrap();
-        // let m = match pattern.find(&string) {
-        //     Some(m) => m,
-        //     None => return Err(()),
-        // };
         string.remove(0);
         string.remove(string.len() - 1);
-        match string.parse::<char>() {
-            Ok(i) => Ok(i as u8),
-            Err(e) => {
-                println!("Error parsing char as u8: {}", e);
-                Err(())
-            }
+        match string.as_str() {
+            r"\n" => return Ok('\n' as u8),
+            r"\t" => return Ok('\t' as u8),
+            r"\r" => return Ok('\r' as u8),
+            _ => match string.parse::<char>() {
+                Ok(i) => Ok(i as u8),
+                Err(e) => {
+                    println!("Error parsing char as u8: {}", e);
+                    Err(())
+                }
+            },
         }
     }
     fn parse_int(mut string: String) -> Result<i32, ()> {
-        // let pattern = Regex::new(r"-?[0-9]+").unwrap();
-        // let m = match pattern.find(&string) {
-        //     Some(m) => m,
-        //     None => return Err(()),
-        // };
         string.remove(0);
         match string.parse::<i32>() {
             Ok(i) => Ok(i),
@@ -100,6 +97,14 @@ impl Directive {
                 Err(())
             }
         }
+    }
+    fn parse_str(mut string: String) -> String {
+        if string.len() == 2 {
+            return String::from("");
+        }
+        string.remove(0);
+        string.remove(string.len() - 1);
+        string
     }
     // fn parse_str(string: String) -> String {
     //     let pattern = Regex::new

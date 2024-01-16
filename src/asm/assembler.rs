@@ -616,24 +616,36 @@ impl<'a> Assembler<'a> {
                 }
                 None => 0,
             };
-            while !self.peek_first_match(&DIR_TOKEN_TYPES)
-                && !self.peek_first_match(&INS_TOKEN_TYPES)
-                && !self.peek_match(TokenType::Label)
-                && !self.reached_eof()
-            {
-                self.advance();
+            while match self.peek() {
+                Some(t) => t.line == self.cur_line,
+                None => return 0,
+            } {
+                self.advance()
             }
+            // while !self.peek_first_match(&DIR_TOKEN_TYPES)
+            //     && !self.peek_first_match(&INS_TOKEN_TYPES)
+            //     && !self.peek_match(TokenType::Label)
+            //     && !self.reached_eof()
+            // {
+            //     self.advance();
+            // }
             num_bytes
         }
         // found opcode instruction token
         else if self.consume_first_match(&INS_TOKEN_TYPES) {
-            while !self.peek_first_match(&DIR_TOKEN_TYPES)
-                && !self.peek_first_match(&INS_TOKEN_TYPES)
-                && !self.peek_match(TokenType::Label)
-                && !self.reached_eof()
-            {
-                self.advance();
+            while match self.peek() {
+                Some(t) => t.line == self.cur_line,
+                None => return 0,
+            } {
+                self.advance()
             }
+            // while !self.peek_first_match(&DIR_TOKEN_TYPES)
+            //     && !self.peek_first_match(&INS_TOKEN_TYPES)
+            //     && !self.peek_match(TokenType::Label)
+            //     && !self.reached_eof()
+            // {
+            //     self.advance();
+            // }
             12
         } else {
             0

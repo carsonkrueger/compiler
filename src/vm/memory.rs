@@ -1,11 +1,13 @@
 use crate::util::endianness::{as_i32_be, as_i32_le, i32_bytes_be, i32_bytes_le};
+use core::num;
 use std::io::Read;
 use std::{fmt::Display, fs::File};
 
-const MEM_CAPACITY: usize = 102400;
+// const MEM_CAPACITY: usize = 102400;
+const STACK_CAPACITY: usize = 10240;
 
 pub struct Memory {
-    bytes: [u8; MEM_CAPACITY],
+    bytes: Box<[u8]>,
     data_seg_start: usize,
     code_seg_start: usize,
     heap_start: usize,
@@ -18,14 +20,16 @@ impl Memory {
     pub fn new(file_path: &String) -> Self {
         let mut file = File::open(file_path).expect("Could not open binary file");
 
+        let num_bytes = file
+            .metadata()
+            .expect("Could not get metadata of binary file")
+            .len();
+
         let mut mem = Self {
-            bytes: [0; 102400],
+            bytes: vec![0; num_bytes as usize + STACK_CAPACITY].into_boxed_slice(),
             data_seg_start: 4,
             code_seg_start: 4,
-            heap_start: file
-                .metadata()
-                .expect("Could not get metadata of binary file")
-                .len() as usize,
+            heap_start: num_bytes as usize,
             heap_size: 0,
             stack_size: 0,
         };
@@ -37,8 +41,8 @@ impl Memory {
 
         mem
     }
-    pub fn capacity() -> usize {
-        MEM_CAPACITY
+    pub fn capacity(&self) -> usize {
+        self.bytes.len()
     }
     fn in_data_seg(&self, idx: usize) -> bool {
         idx < self.code_seg_start
@@ -81,7 +85,6 @@ impl Memory {
             return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
         let bytes = i32_bytes_le(int);
-        println!("setting idx {}, to {}", idx, int);
         self.bytes[idx] = bytes[0];
         self.bytes[idx + 1] = bytes[1];
         self.bytes[idx + 2] = bytes[2];
@@ -130,7 +133,7 @@ impl Memory {
 impl Default for Memory {
     fn default() -> Self {
         Self {
-            bytes: [0; 102400],
+            bytes: Box::new([0; STACK_CAPACITY]),
             data_seg_start: 4,
             code_seg_start: 4,
             heap_start: 4,

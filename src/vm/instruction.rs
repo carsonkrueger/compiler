@@ -215,7 +215,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     fn ldr2(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let addr = match cpu.rg_at_ref(self.op1 as usize) {
+        let addr = match cpu.rg_at_ref(self.op2 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
@@ -395,7 +395,7 @@ impl Instruction {
             2 => self.trp2(cpu),
             3 => self.trp3(cpu),
             4 => self.trp4(cpu),
-            // 5 => self.trp5(cpu),
+            5 => self.trp5(cpu),
             // 6 => self.trp6(cpu),
             // 7 => self.trp7(cpu),
             _ => ExecuteResult::Error(VMErr::CpuErr(super::cpu::CpuErr::InvalidInstruction(
@@ -456,8 +456,20 @@ impl Instruction {
         r3.set_u8(int);
         ExecuteResult::Continue
     }
-    // fn trp4(&self, cpu: &mut Cpu) -> ExecuteResult {}
-    // fn trp5(&self, cpu: &mut Cpu) -> ExecuteResult {}
+    fn trp5(&self, cpu: &mut Cpu) -> ExecuteResult {
+        let str_idx = cpu.rg_at_ref(3).expect("Could not get R3").get_i32();
+        let mut str_len = match cpu.memory.get_data_seg_u8(str_idx as usize) {
+            Ok(i) => i,
+            Err(e) => return ExecuteResult::Error(VMErr::MemoryErr(e)),
+        };
+        for i in str_idx..str_idx + str_len as i32 {
+            let ch = match cpu.memory.get_any_u8(i as usize) {
+                Ok(i) => print!("{}", i as char),
+                Err(e) => return ExecuteResult::Error(VMErr::MemoryErr(e)),
+            };
+        }
+        ExecuteResult::Continue
+    }
     pub fn write<W: Write + Seek>(&self, writer: &mut W) -> std::io::Result<()> {
         writer.seek(std::io::SeekFrom::End(0))?;
         writer.write_all(&self.as_box_slice().as_slice())

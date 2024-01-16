@@ -46,6 +46,7 @@ pub enum TokenType {
     Allc,
     Trp,
     Comment,
+    Unknown,
 }
 
 #[derive(Debug, Clone)]
