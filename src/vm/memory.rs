@@ -3,7 +3,6 @@ use core::num;
 use std::io::Read;
 use std::{fmt::Display, fs::File};
 
-// const MEM_CAPACITY: usize = 102400;
 const STACK_CAPACITY: usize = 10240;
 
 pub struct Memory {
@@ -183,6 +182,12 @@ impl Display for MemoryErr {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn capacity_test() {
+        let mut m = Memory::new(&String::from("we.bin"));
+        assert_eq!(m.capacity(), 10318);
+    }
 
     #[test]
     fn get_any_i32_test() {

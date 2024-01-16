@@ -9,13 +9,20 @@
       "request": "launch",
       "name": "Debug executable 'compiler'",
       "cargo": {
-        "args": ["build", "--bin=compiler", "--package=compiler"],
+        "args": [
+          "build",
+          "--bin=compiler",
+          "--package=compiler"
+        ],
         "filter": {
           "name": "compiler",
           "kind": "bin"
         }
       },
-      "args": ["--file-path", "we.asm"],
+      "args": [
+        "--file-path",
+        "P3.bin"
+      ],
       "cwd": "${workspaceFolder}"
     },
     {
@@ -23,7 +30,12 @@
       "request": "launch",
       "name": "Debug unit tests in executable 'compiler'",
       "cargo": {
-        "args": ["test", "--no-run", "--bin=compiler", "--package=compiler"],
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=compiler",
+          "--package=compiler"
+        ],
         "filter": {
           "name": "compiler",
           "kind": "bin"

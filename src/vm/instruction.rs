@@ -279,7 +279,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     fn cmp(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let rs_int = match cpu.rg_at_ref(self.op1 as usize) {
+        let rs_int = match cpu.rg_at_ref(self.op2 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };

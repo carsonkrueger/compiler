@@ -8,7 +8,7 @@ use super::{
 };
 use crate::vm::memory::Memory;
 
-/// PC = 65, SL = 66, SB = 67, SP = 68, FP = 69, HP = 70
+/// PC = 64, SL = 65, SB = 66, SP = 67, FP = 68, HP = 69
 const NUM_RGS: usize = 70;
 
 pub struct Cpu {

@@ -78,10 +78,7 @@ impl<'a> Assembler<'a> {
         let mut lc = 4;
         while !self.reached_eof() {
             if self.consume_match(TokenType::Label) {
-                let mut label_token = match self.previous() {
-                    Some(t) => t.clone(),
-                    None => continue,
-                };
+                let mut label_token = self.previous_expect().clone();
                 label_token.lexeme.remove(label_token.lexeme.len() - 1);
                 let symbol = Symbol::new(label_token, lc);
                 self.symbol_table.insert(&symbol);
@@ -135,6 +132,10 @@ impl<'a> Assembler<'a> {
     }
     fn advance(&mut self) {
         self.cur_idx += 1;
+        match self.previous() {
+            Some(t) => self.cur_line = t.line,
+            None => (),
+        };
     }
     fn retract(&mut self) {
         self.cur_idx -= 1;
@@ -171,7 +172,6 @@ impl<'a> Assembler<'a> {
 
         if bool {
             self.advance();
-            self.cur_line = self.previous_expect().line;
         }
         bool
     }
@@ -185,7 +185,6 @@ impl<'a> Assembler<'a> {
 
             if bool {
                 self.advance();
-                self.cur_line = self.previous_expect().line;
                 return true;
             }
         }
@@ -556,7 +555,7 @@ impl<'a> Assembler<'a> {
                     match self.previous() {
                         Some(t) => match Self::i32_try_from_int_imm_str(&t.lexeme) {
                             Ok(i) => {
-                                if i < 0 || i > 4 {
+                                if i < 0 || i > 5 {
                                     return Err(AssemblerErr::InvalidToken(
                                         t.clone(),
                                         self.cur_line,
