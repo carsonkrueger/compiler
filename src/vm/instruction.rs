@@ -62,7 +62,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     fn jmr(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let int = match cpu.rg_at_mut(self.op1 as usize) {
+        let int = match cpu.rg_at_ref(self.op1 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
@@ -70,7 +70,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     fn bnz(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let int = match cpu.rg_at_mut(self.op1 as usize) {
+        let int = match cpu.rg_at_ref(self.op1 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
@@ -80,7 +80,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     fn bgt(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let int = match cpu.rg_at_mut(self.op1 as usize) {
+        let int = match cpu.rg_at_ref(self.op1 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };
@@ -90,7 +90,7 @@ impl Instruction {
         ExecuteResult::Continue
     }
     fn blt(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let int = match cpu.rg_at_mut(self.op1 as usize) {
+        let int = match cpu.rg_at_ref(self.op1 as usize) {
             Ok(r) => r.get_i32(),
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
         };

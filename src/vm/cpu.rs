@@ -37,23 +37,32 @@ impl Cpu {
             .expect("Could not fetch initial pc");
         self.set_pc(first_int);
 
+        let mut init_pc = 0;
+        let mut ints = [0, 0, 0];
+        let mut instruction = Instruction {
+            opcode: Opcode::Jmp,
+            op1: 0,
+            op2: 0,
+        };
+
         loop {
             if !self.has_next_instruction() {
                 panic!("Cannot fetch next instruction at: {}", self.get_pc());
             }
 
             // fetch
-            let ints = self.fetch();
-            // decode
-            let instruction = self.decode(&ints);
+            ints = self.fetch();
             // increment pc
+            init_pc = self.get_pc();
             self.set_pc(self.get_pc() + 12);
+            // decode
+            instruction = self.decode(&ints);
             // execute
             match instruction.execute(self) {
                 ExecuteResult::Continue => continue,
                 ExecuteResult::Exit => break,
                 ExecuteResult::Error(e) => {
-                    panic!("Error at PC = {}\n{}", self.get_pc() - 12, e)
+                    panic!("Error at PC = {}\n{}", init_pc - 12, e)
                 }
             }
         }

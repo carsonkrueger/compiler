@@ -27,6 +27,56 @@ fn execute_test() {
 }
 
 #[test]
+fn cmp_test() {
+    let path = String::from("HelloWorld.bin");
+    let mut cpu = Cpu::new(&path);
+
+    cpu.rg_at_mut(0).expect("").set_i32(0);
+    cpu.rg_at_mut(1).expect("").set_i32(0);
+    let i = Instruction {
+        opcode: Opcode::Cmp,
+        op1: 0,
+        op2: 1,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 0);
+    assert_ne!(cpu.rg_at_ref(0).expect("").get_i32(), 1);
+    assert_ne!(cpu.rg_at_ref(0).expect("").get_i32(), -1);
+
+    cpu.rg_at_mut(0).expect("").set_i32(0);
+    cpu.rg_at_mut(63).expect("").set_i32(100);
+    let i = Instruction {
+        opcode: Opcode::Cmp,
+        op1: 0,
+        op2: 63,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), -1);
+
+    cpu.rg_at_mut(0).expect("").set_i32(-100);
+    cpu.rg_at_mut(63).expect("").set_i32(-120);
+    let i = Instruction {
+        opcode: Opcode::Cmp,
+        op1: 0,
+        op2: 63,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 1);
+
+    cpu.rg_at_mut(0).expect("").set_i32(-256);
+    cpu.rg_at_mut(63).expect("").set_i32(-256);
+    let i = Instruction {
+        opcode: Opcode::Cmp,
+        op1: 0,
+        op2: 63,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 0);
+    assert_ne!(cpu.rg_at_ref(0).expect("").get_i32(), 1);
+    assert_ne!(cpu.rg_at_ref(0).expect("").get_i32(), -1);
+}
+
+#[test]
 fn mov_test() {
     let path = String::from("HelloWorld.bin");
     let mut cpu = Cpu::new(&path);

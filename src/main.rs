@@ -48,9 +48,9 @@ fn main() {
             let asm_lexer = crate::asm::lexer::Lexer::new(&args.file_path);
             let asm_tokens: Vec<asm::token::Token> = asm_lexer.into_iter().collect();
 
-            // for t in &asm_tokens {
-            //     println!("{:?}", t);
-            // }
+            for t in &asm_tokens {
+                println!("{:?}", t);
+            }
 
             let file_name = file_name(&args.file_path).unwrap().to_owned();
             let mut assembler = Assembler::new(&asm_tokens, &file_name);

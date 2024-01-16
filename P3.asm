@@ -58,15 +58,15 @@ LOOP:   MOVI R10, #10                   ;137
 
 P_EVEN: LDR  R3,  R14           ;269
         TRP  #1        ;print arr[i]    ;281
-        LDA  R3,  even
-        TRP  #5        ;print even msg
-        LDB  R3,  nl
-        TRP  #3
-        JMP  END
+        LDA  R3,  even                  ;293
+        TRP  #5        ;print even msg  ;305
+        LDB  R3,  nl                    ;317
+        TRP  #3                         ;329
+        JMP  END                        ;341
         
-P_ODD:  LDR  R3,  R14
-        TRP  #1        ;print arr[i]
-        LDA  R3,  odd
+P_ODD:  LDR  R3,  R14                   ;353
+        TRP  #1        ;print arr[i]    ;365
+        LDA  R3,  odd                   ;377
         TRP  #5        ;print even msg
         LDB  R3,  nl
         TRP  #3

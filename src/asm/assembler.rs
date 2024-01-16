@@ -82,7 +82,6 @@ impl<'a> Assembler<'a> {
                 label_token.lexeme.remove(label_token.lexeme.len() - 1);
                 let symbol = Symbol::new(label_token, lc);
                 self.symbol_table.insert(&symbol);
-                println!("Inserted {:?} at {}", symbol, lc);
             }
             // set init pc
             if self.peek_first_match(&INS_TOKEN_TYPES) && self.init_pc == 4 {
@@ -482,7 +481,8 @@ impl<'a> Assembler<'a> {
                     ));
                 };
                 Ok(Instruction {
-                    opcode: Opcode::Movi,
+                    opcode: Opcode::try_from(opcode_token.token_type)
+                        .expect("Could not get opcode from tokentype"),
                     op1: rd,
                     op2: imm,
                 })
