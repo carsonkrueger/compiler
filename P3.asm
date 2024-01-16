@@ -1,6 +1,6 @@
-size:   .INT  #10
+size:   .INT  #10       ;4
 
-arr:    .INT  #10
+arr:    .INT  #10       ;8
         .INT  #2
         .INT  #3
         .INT  #4
@@ -11,53 +11,53 @@ arr:    .INT  #10
         .INT  #9
         .INT  #10
 
-i:      .INT  #0
-sum:    .INT  #0
-temp:   .INT
-result: .INT
+i:      .INT  #0        ;48
+sum:    .INT  #0        ;52
+temp:   .INT            ;56
+result: .INT            ;60
 
-even:   .STR  " is even"
-odd:    .STR  " is odd"
-sumstr: .STR  "Sum is "
-relend: .STR  " -- "
-nl:     .BYT  '\n'
-space:  .BYT  ' '
-substr: .STR  " - "
-eqstr:  .STR  " = "
+even:   .STR  " is even"        ;64
+odd:    .STR  " is odd"         ;73
+sumstr: .STR  "Sum is "         ;81
+relend: .STR  " -- "            ;89
+nl:     .BYT  '\n'              ;94
+space:  .BYT  ' '               ;95
+substr: .STR  " - "             ;96
+eqstr:  .STR  " = "             ;100
 
-DAGS:   .BYT  'D'
+DAGS:   .BYT  'D'               ;104
         .BYT  'A'
         .BYT  'G'
         .BYT  'S'
 
-GADS:   .INT  #-99 ; 157 255 255 255
+GADS:   .INT  #-99 ; 157 255 255 255    ;108
 
-rel:    .BYT  ' '
+rel:    .BYT  ' '       ;112
 
 ; i = R15
 ; i offset = R14
 ; sum = R13
 ; result = R12
 
-        JMP  MAIN 
-MAIN:   LDA  R14, arr   ;load i offset
+        JMP  MAIN                       ;113
+MAIN:   LDA  R14, arr   ;load i offset  ;125
 
-LOOP:   MOVI R10, #10
-        CMP  R10, R15  ;cmp i to size 10
-        BRZ  R10, NEXT ;branch to NEXT at i == 10
+LOOP:   MOVI R10, #10                   ;137
+        CMP  R10, R15  ;cmp i to size 10        ;149
+        BRZ  R10, NEXT ;branch to NEXT at i == 10       ;161
 
-        LDR  R0,  R14  ;load arr[i] into R0
-        ADD  R13, R0   ;add arr[i] to sum
+        LDR  R0,  R14  ;load arr[i] into R0             ;173
+        ADD  R13, R0   ;add arr[i] to sum               ;185
 
-        LDR  R12, R14  ;begin arr[i] % 2
-        DIVI R12, #2   ;div arr[i] by 2, will do int division
-        MULI R12, #2   ;multiply division result by arr[i] to see if result comes back to full value
-        CMP  R0,  R12  ;compare if they  are the same value, 0 if true, 1 if false (modulo)
-        BRZ  R0,  P_EVEN
-        BNZ  R0,  P_ODD
+        LDR  R12, R14  ;begin arr[i] % 2                ;197
+        DIVI R12, #2   ;div arr[i] by 2, will do int division   ;209
+        MULI R12, #2   ;multiply division result by arr[i] to see if result comes back to full value    ;221
+        CMP  R0,  R12  ;compare if they  are the same value, 0 if true, 1 if false (modulo)     ;233
+        BRZ  R0,  P_EVEN        ;245
+        BNZ  R0,  P_ODD         ;257
 
-P_EVEN: LDR  R3,  R14
-        TRP  #1        ;print arr[i]
+P_EVEN: LDR  R3,  R14           ;269
+        TRP  #1        ;print arr[i]    ;281
         LDA  R3,  even
         TRP  #5        ;print even msg
         LDB  R3,  nl
