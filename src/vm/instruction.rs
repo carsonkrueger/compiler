@@ -462,8 +462,8 @@ impl Instruction {
             Ok(i) => i,
             Err(e) => return ExecuteResult::Error(VMErr::MemoryErr(e)),
         };
-        for i in str_idx..str_idx + str_len as i32 {
-            let ch = match cpu.memory.get_any_u8(i as usize) {
+        for i in (str_idx + 1)..=(str_idx + str_len as i32) {
+            let ch = match cpu.memory.get_data_seg_u8(i as usize) {
                 Ok(i) => print!("{}", i as char),
                 Err(e) => return ExecuteResult::Error(VMErr::MemoryErr(e)),
             };

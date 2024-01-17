@@ -100,7 +100,7 @@ NEXT:   LDA  R3,  sumstr
         LDB  R4,  R4
         LDB  R5,  R5
         
-        STB  R4,  R7   ;set byte 1 to 'D'
+        STB  R4,  R7   ;set byte 1 to 'D' ; ERR ------
         STB  R5,  R6   ;set byte 3 to 'G'
 
         LDB  R3,  nl

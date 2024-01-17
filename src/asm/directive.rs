@@ -13,6 +13,13 @@ pub enum Directive {
 impl Directive {
     pub fn write<W: Write + Seek>(&self, writer: &mut W) -> std::io::Result<()> {
         writer.seek(std::io::SeekFrom::End(0))?;
+        match &self {
+            Directive::Str(s) => {
+                writer.write(&[s.len() as u8]);
+                ()
+            }
+            _ => (),
+        };
         let bytes = match &self {
             Directive::Int(i) => i.to_le_bytes().as_slice().to_owned(),
             Directive::Byt(b) => b.to_le_bytes().as_slice().to_owned(),
@@ -54,7 +61,7 @@ impl Directive {
                         _ => Err(()),
                     }
                 } else {
-                    Ok(Directive::Byt(0))
+                    Ok(Directive::Int(0))
                 }
             }
             TokenType::StrDir => {
@@ -66,7 +73,7 @@ impl Directive {
                         _ => Err(()),
                     }
                 } else {
-                    Ok(Directive::Byt(0))
+                    Ok(Directive::Str(String::from("")))
                 }
             }
             _ => Err(()),
