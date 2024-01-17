@@ -13,8 +13,8 @@ arr:    .INT  #10       ;8
 
 i:      .INT  #0        ;48
 sum:    .INT  #0        ;52
-temp:   .INT            ;56
-result: .INT            ;60
+temp:   .INT  #0        ;56
+result: .INT  #0        ;60
 
 even:   .STR  " is even"        ;64
 odd:    .STR  " is odd"         ;73

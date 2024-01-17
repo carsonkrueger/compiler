@@ -68,20 +68,17 @@ impl Cpu {
         }
     }
     fn fetch(&self) -> [i32; 3] {
-        let mut ints: [i32; 3] = [0, 0, 0];
-        ints[0] = self
-            .memory
-            .get_code_seg_i32(self.get_pc() as usize)
-            .expect("Could not cpu.fetch() bytes");
-        ints[1] = self
-            .memory
-            .get_code_seg_i32(self.get_pc() as usize + 4)
-            .expect("Could not cpu.fetch() bytes");
-        ints[2] = self
-            .memory
-            .get_code_seg_i32(self.get_pc() as usize + 8)
-            .expect("Could not cpu.fetch() bytes");
-        ints
+        [
+            self.memory
+                .get_code_seg_i32(self.get_pc() as usize)
+                .expect("Could not cpu.fetch() bytes"),
+            self.memory
+                .get_code_seg_i32(self.get_pc() as usize + 4)
+                .expect("Could not cpu.fetch() bytes"),
+            self.memory
+                .get_code_seg_i32(self.get_pc() as usize + 8)
+                .expect("Could not cpu.fetch() bytes"),
+        ]
     }
     fn decode(&self, ints: &[i32; 3]) -> Instruction {
         Instruction {

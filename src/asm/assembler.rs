@@ -99,6 +99,7 @@ impl<'a> Assembler<'a> {
         writer.write_all(self.init_pc.to_le_bytes().as_slice());
         while !self.reached_eof() {
             if let Some(directive) = self.consume_next_directive() {
+                // println!("Wrote dir: {:?}", directive);
                 match directive.write(&mut writer) {
                     Err(e) => panic!(
                         "Error writing directive {:?}\nTo file: {}",
@@ -113,6 +114,7 @@ impl<'a> Assembler<'a> {
         while !self.reached_eof() {
             match self.consume_next_instruction() {
                 Ok(instruction) => {
+                    // println!("Wrote ins: {:?}", instruction);
                     match instruction.write(&mut writer) {
                         Err(e) => panic!(
                             "Error writing instruction {:?} to {}",
