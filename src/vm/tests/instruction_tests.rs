@@ -570,3 +570,182 @@ fn brz_test() {
     i.execute(&mut cpu);
     assert_ne!(cpu.get_pc(), 13);
 }
+
+#[test]
+fn sub_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(0).expect("").set_i32(32);
+    cpu.rg_at_mut(1).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Sub,
+        op1: 0,
+        op2: 1,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 0);
+
+    cpu.rg_at_mut(10).expect("").set_i32(32);
+    cpu.rg_at_mut(32).expect("").set_i32(-1000000032);
+    let mut i = Instruction {
+        opcode: Opcode::Sub,
+        op1: 10,
+        op2: 32,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_i32(), 1000000064);
+
+    cpu.rg_at_mut(10).expect("").set_i32(32);
+    cpu.rg_at_mut(32).expect("").set_i32(-1000000032);
+    let mut i = Instruction {
+        opcode: Opcode::Sub,
+        op1: 32,
+        op2: 10,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(32).expect("").get_i32(), -1000000064);
+}
+
+#[test]
+fn add_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(0).expect("").set_i32(32);
+    cpu.rg_at_mut(1).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Add,
+        op1: 0,
+        op2: 1,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 64);
+
+    cpu.rg_at_mut(10).expect("").set_i32(32);
+    cpu.rg_at_mut(32).expect("").set_i32(-1000000032);
+    let mut i = Instruction {
+        opcode: Opcode::Add,
+        op1: 10,
+        op2: 32,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_i32(), -1000000000);
+}
+
+#[test]
+fn adi_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(0).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Adi,
+        op1: 0,
+        op2: 1,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 33);
+
+    cpu.rg_at_mut(10).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Adi,
+        op1: 10,
+        op2: -1032,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_i32(), -1000);
+}
+
+#[test]
+fn div_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(0).expect("").set_i32(32);
+    cpu.rg_at_mut(1).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Div,
+        op1: 0,
+        op2: 1,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 1);
+
+    cpu.rg_at_mut(10).expect("").set_i32(-1000);
+    cpu.rg_at_mut(32).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Div,
+        op1: 10,
+        op2: 32,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_i32(), -31);
+}
+
+#[test]
+fn divi_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(0).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Divi,
+        op1: 0,
+        op2: 2,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 16);
+
+    cpu.rg_at_mut(10).expect("").set_i32(-1000);
+    let mut i = Instruction {
+        opcode: Opcode::Divi,
+        op1: 10,
+        op2: 32,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_i32(), -31);
+}
+
+#[test]
+fn mul_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(0).expect("").set_i32(32);
+    cpu.rg_at_mut(1).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Mul,
+        op1: 0,
+        op2: 1,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 1024);
+
+    cpu.rg_at_mut(10).expect("").set_i32(32);
+    cpu.rg_at_mut(32).expect("").set_i32(-1000);
+    let mut i = Instruction {
+        opcode: Opcode::Mul,
+        op1: 10,
+        op2: 32,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_i32(), -32000);
+}
+
+#[test]
+fn muli_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(0).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Muli,
+        op1: 0,
+        op2: 2,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(0).expect("").get_i32(), 64);
+
+    cpu.rg_at_mut(10).expect("").set_i32(32);
+    let mut i = Instruction {
+        opcode: Opcode::Muli,
+        op1: 10,
+        op2: -1000,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_i32(), -32000);
+}
