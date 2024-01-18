@@ -228,6 +228,52 @@ fn str2_test() {
 }
 
 #[test]
+fn ldb_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(10).expect("").set_i32(5);
+    let mut i = Instruction {
+        opcode: Opcode::Ldb,
+        op1: 10,
+        op2: 100,
+    };
+    assert_eq!(i.execute(&mut cpu), ExecuteResult::Continue);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_u8() as char, '\n');
+
+    let mut i = Instruction {
+        opcode: Opcode::Ldb,
+        op1: 10,
+        op2: 88,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_u8(), 5);
+}
+
+#[test]
+fn ldb2_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(10).expect("").set_i32(5);
+    cpu.rg_at_mut(61).expect("").set_i32(100);
+    let mut i = Instruction {
+        opcode: Opcode::Ldb2,
+        op1: 10,
+        op2: 61,
+    };
+    assert_eq!(i.execute(&mut cpu), ExecuteResult::Continue);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_u8() as char, '\n');
+
+    cpu.rg_at_mut(22).expect("").set_i32(84);
+    let mut i = Instruction {
+        opcode: Opcode::Ldb2,
+        op1: 10,
+        op2: 22,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.rg_at_ref(10).expect("").get_u8(), 3);
+}
+
+#[test]
 fn stb_test() {
     let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
 

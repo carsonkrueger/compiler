@@ -267,9 +267,13 @@ impl Instruction {
         ExecuteResult::Continue
     }
     fn ldb2(&self, cpu: &mut Cpu) -> ExecuteResult {
-        let byte = match cpu.rg_at_ref(self.op2 as usize) {
-            Ok(r) => r.get_u8(),
+        let addr = match cpu.rg_at_ref(self.op2 as usize) {
+            Ok(r) => r.get_i32() as usize,
             Err(e) => return ExecuteResult::Error(VMErr::CpuErr(e)),
+        };
+        let byte = match cpu.memory.get_any_u8(addr) {
+            Ok(b) => b,
+            Err(e) => return ExecuteResult::Error(VMErr::MemoryErr(e)),
         };
         let rd = match cpu.rg_at_mut(self.op1 as usize) {
             Ok(r) => r,

@@ -4,13 +4,13 @@ C:      .STR  "I can print ;"   ;26-39
 D:      .STR  "1 + 3 = "         ;40-48
 E:      .STR  "2 * 3 = "         ;49-57
 F:      .STR  "1 - 5 = "         ;58-66
-G:      .STR  "5 / 2 = "         ;67-76
-one:    .INT  #1                ;80
-two:    .INT  #2                ;84
-three:  .INT  #3                ;88
-five:   .INT  #5                ;92
-H:      .STR  "Goodbye"         ;100
-nl:     .BYT  '\n'              ;101
+G:      .STR  "5 / 2 = "         ;67-75
+one:    .INT  #1                ;76-79
+two:    .INT  #2                ;80-83
+three:  .INT  #3                ;84-87
+five:   .INT  #5                ;88-91
+H:      .STR  "Goodbye"         ;92-99
+nl:     .BYT  '\n'              ;100
 
         JMP  MAIN
 MAIN:   LDA  R3, A

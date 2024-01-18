@@ -83,6 +83,7 @@ impl<'a> Assembler<'a> {
                 label_token.lexeme.remove(label_token.lexeme.len() - 1); // remove colon from label
                 let symbol = Symbol::new(label_token, lc);
                 self.symbol_table.insert(&symbol);
+                // println!("inserted: {:?}", symbol.);
             }
             // set init pc
             if self.peek_first_match(&INS_TOKEN_TYPES) && self.init_pc == 4 {
