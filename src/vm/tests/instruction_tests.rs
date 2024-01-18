@@ -229,8 +229,7 @@ fn str2_test() {
 
 #[test]
 fn stb_test() {
-    let path = String::from("HelloWorld.bin");
-    let mut cpu = Cpu::new(&path);
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
 
     cpu.rg_at_mut(63).expect("").set_u8(255);
     let mut i = Instruction {
@@ -250,26 +249,61 @@ fn stb_test() {
     i.execute(&mut cpu);
     assert_eq!(cpu.memory.get_any_u8(50).expect(""), 16);
 
-    cpu.rg_at_mut(10).expect("").set_u8(161);
+    cpu.rg_at_mut(9).expect("").set_u8(151);
+    let mut i = Instruction {
+        opcode: Opcode::Stb,
+        op1: 9,
+        op2: 100,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.memory.get_any_u8(100).expect(""), 151);
+
     let mut i = Instruction {
         opcode: Opcode::Stb,
         op1: 10,
         op2: 101,
     };
-    i.execute(&mut cpu);
-    assert_eq!(cpu.memory.get_any_u8(101).expect(""), 161);
-
-    let mut i = Instruction {
-        opcode: Opcode::Stb,
-        op1: 10,
-        op2: 102,
-    };
     assert_eq!(
         i.execute(&mut cpu),
         ExecuteResult::Error(crate::vm::cpu::VMErr::MemoryErr(
-            crate::vm::memory::MemoryErr::SetInsideCodeSegBounds(102)
+            crate::vm::memory::MemoryErr::SetInsideCodeSegBounds(101)
         ))
     )
+}
+
+#[test]
+fn stb2_test() {
+    let mut cpu = Cpu::new(&String::from("HelloWorld.bin"));
+
+    cpu.rg_at_mut(63).expect("").set_u8(255);
+    cpu.rg_at_mut(2).expect("").set_u8(0);
+    let mut i = Instruction {
+        opcode: Opcode::Stb2,
+        op1: 63,
+        op2: 2,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.memory.get_any_u8(0).expect(""), 255);
+
+    cpu.rg_at_mut(63).expect("").set_u8(161);
+    cpu.rg_at_mut(10).expect("").set_u8(100);
+    let mut i = Instruction {
+        opcode: Opcode::Stb2,
+        op1: 63,
+        op2: 10,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.memory.get_any_u8(100).expect(""), 161);
+
+    cpu.rg_at_mut(63).expect("").set_u8(161);
+    cpu.rg_at_mut(10).expect("").set_u8(101);
+    let mut i = Instruction {
+        opcode: Opcode::Stb2,
+        op1: 63,
+        op2: 10,
+    };
+    assert_ne!(i.execute(&mut cpu), ExecuteResult::Continue);
+    assert_ne!(i.execute(&mut cpu), ExecuteResult::Exit);
 }
 
 #[test]

@@ -45,3 +45,64 @@ impl Default for Register {
         Self(0)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_i32() {
+        let mut r = Register(0);
+
+        assert_eq!(r.get_i32(), 0);
+        r.0 = 5;
+        assert_eq!(r.get_i32(), 5);
+        r.0 = 255;
+        assert_eq!(r.get_i32(), 255);
+        r.0 = 256;
+        assert_eq!(r.get_i32(), 256);
+        r.0 = 1000000000;
+        assert_eq!(r.get_i32(), 1000000000);
+        r.0 = -1000000000;
+        assert_eq!(r.get_i32(), -1000000000);
+    }
+
+    #[test]
+    fn test_get_u8() {
+        let mut r = Register(0);
+
+        assert_eq!(r.get_u8(), 0);
+        r.0 = 5u8 as i32;
+        assert_eq!(r.get_u8(), 5);
+        r.0 = 255u8 as i32;
+        assert_eq!(r.get_u8(), 255);
+        r.0 = 161u8 as i32;
+        assert_eq!(r.get_u8(), 161);
+    }
+
+    #[test]
+    fn test_set_u8() {
+        let mut r = Register(0);
+
+        r.set_u8(0);
+        assert_eq!(r.get_u8(), 0);
+
+        r.set_u8(151);
+        assert_eq!(r.get_u8(), 151);
+
+        r.set_u8(255);
+        assert_eq!(r.get_u8(), 255);
+
+        r.set_i32(255);
+        assert_eq!(r.get_u8(), 255);
+
+        r.set_i32(256);
+        assert_eq!(r.get_u8(), 0);
+
+        r.set_i32(257);
+        assert_eq!(r.get_u8(), 1);
+
+        r.set_i32(258);
+        assert_ne!(r.get_u8(), 1);
+    }
+}
