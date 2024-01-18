@@ -7,7 +7,7 @@ use super::{
     opcode::Opcode,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Instruction {
     pub opcode: Opcode,
     pub op1: i32,

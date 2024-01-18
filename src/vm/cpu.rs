@@ -127,7 +127,7 @@ impl Cpu {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CpuErr {
     RgOutOfBounds(usize),
     InvalidInstruction(Instruction),
@@ -142,6 +142,7 @@ impl Display for CpuErr {
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub enum VMErr {
     MemoryErr(MemoryErr),
     CpuErr(CpuErr),
@@ -160,6 +161,7 @@ impl Display for VMErr {
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub enum ExecuteResult {
     Continue,
     Exit,

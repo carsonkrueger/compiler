@@ -91,7 +91,7 @@ impl Memory {
         Ok(())
     }
     pub fn set_u8(&mut self, idx: usize, byte: u8) -> Result<(), MemoryErr> {
-        if !self.in_code_seg(idx) {
+        if self.in_code_seg(idx) {
             return Err(MemoryErr::SetInsideCodeSegBounds(idx));
         }
         self.bytes[idx] = byte;
@@ -104,7 +104,7 @@ impl Memory {
         Ok(self.get_i32(idx))
     }
     pub fn get_any_u8(&self, idx: usize) -> Result<u8, MemoryErr> {
-        if self.in_bounds(idx) {
+        if !self.in_bounds(idx) {
             return Err(MemoryErr::OutOfMemoryBounds(idx));
         }
         Ok(self.get_u8(idx))
@@ -142,7 +142,7 @@ impl Default for Memory {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum MemoryErr {
     OutOfMemoryBounds(usize),
     OutOfDataSegBounds(usize),

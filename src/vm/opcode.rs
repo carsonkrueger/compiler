@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::asm::token::TokenType;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Opcode {
     Jmp,
     Jmr,
@@ -216,7 +216,7 @@ impl TryFrom<(TokenType, TokenType)> for Opcode {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum OpcodeErr {
     InvalidOpcode(i32),
 }

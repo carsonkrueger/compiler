@@ -5,12 +5,12 @@ D:      .STR  "1 + 3 = "         ;40-48
 E:      .STR  "2 * 3 = "         ;49-57
 F:      .STR  "1 - 5 = "         ;58-66
 G:      .STR  "5 / 2 = "         ;67-76
-one:    .INT  #1 
-two:    .INT  #2
-three:  .INT  #3
-five:   .INT  #5
-H:      .STR  "Goodbye"
-nl:     .BYT  '\n'
+one:    .INT  #1                ;80
+two:    .INT  #2                ;84
+three:  .INT  #3                ;88
+five:   .INT  #5                ;92
+H:      .STR  "Goodbye"         ;100
+nl:     .BYT  '\n'              ;101
 
         JMP  MAIN
 MAIN:   LDA  R3, A

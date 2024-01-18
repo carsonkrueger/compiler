@@ -72,6 +72,7 @@ impl<'a> Assembler<'a> {
     }
     pub fn run(&mut self) {
         self.pass_one();
+        // println!("Init pc: {}", self.init_pc);
         self.pass_two();
     }
     fn pass_one(&mut self) {
@@ -79,7 +80,7 @@ impl<'a> Assembler<'a> {
         while !self.reached_eof() {
             if self.consume_match(TokenType::Label) {
                 let mut label_token = self.previous_expect().clone();
-                label_token.lexeme.remove(label_token.lexeme.len() - 1);
+                label_token.lexeme.remove(label_token.lexeme.len() - 1); // remove colon from label
                 let symbol = Symbol::new(label_token, lc);
                 self.symbol_table.insert(&symbol);
             }
@@ -93,8 +94,13 @@ impl<'a> Assembler<'a> {
     }
     fn pass_two(&mut self) {
         self.reset();
-        let mut writer = File::create(self.file_name.clone() + &String::from(".bin"))
-            .expect("Could not create binary file");
+        // let mut writer = File::open(self.file_name.clone() + &String::from(".bin")).
+        // .expect("Could not create binary file");
+        let mut writer = std::fs::OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(self.file_name.clone() + &String::from(".bin"))
+            .expect("Could not create binary file for assembler");
         // write init pc
         writer.write_all(self.init_pc.to_le_bytes().as_slice());
         while !self.reached_eof() {

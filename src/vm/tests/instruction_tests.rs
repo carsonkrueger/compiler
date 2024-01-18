@@ -1,4 +1,8 @@
-use crate::vm::{cpu::Cpu, instruction::Instruction, opcode::Opcode};
+use crate::vm::{
+    cpu::{Cpu, ExecuteResult},
+    instruction::Instruction,
+    opcode::Opcode,
+};
 
 #[test]
 fn execute_test() {
@@ -221,6 +225,51 @@ fn str2_test() {
     };
     i.execute(&mut cpu);
     assert_eq!(cpu.memory.get_data_seg_i32(10).expect(""), 200000000);
+}
+
+#[test]
+fn stb_test() {
+    let path = String::from("HelloWorld.bin");
+    let mut cpu = Cpu::new(&path);
+
+    cpu.rg_at_mut(63).expect("").set_u8(255);
+    let mut i = Instruction {
+        opcode: Opcode::Stb,
+        op1: 63,
+        op2: 2,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.memory.get_any_u8(2).expect(""), 255);
+
+    cpu.rg_at_mut(10).expect("").set_u8(16);
+    let mut i = Instruction {
+        opcode: Opcode::Stb,
+        op1: 10,
+        op2: 50,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.memory.get_any_u8(50).expect(""), 16);
+
+    cpu.rg_at_mut(10).expect("").set_u8(161);
+    let mut i = Instruction {
+        opcode: Opcode::Stb,
+        op1: 10,
+        op2: 101,
+    };
+    i.execute(&mut cpu);
+    assert_eq!(cpu.memory.get_any_u8(101).expect(""), 161);
+
+    let mut i = Instruction {
+        opcode: Opcode::Stb,
+        op1: 10,
+        op2: 102,
+    };
+    assert_eq!(
+        i.execute(&mut cpu),
+        ExecuteResult::Error(crate::vm::cpu::VMErr::MemoryErr(
+            crate::vm::memory::MemoryErr::SetInsideCodeSegBounds(102)
+        ))
+    )
 }
 
 #[test]
